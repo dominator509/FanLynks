@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Custom Link Hub Admin</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0a0a0f; --panel:#14141c; --panel2:#1d1d29; --text:#f5f7fb; --muted:#a9b1c7; --line:#2a2d3a; --accent:#7c5cff; --accent2:#25c2a0; --danger:#ff5b6e; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,sans-serif;background:linear-gradient(180deg,#09090f,#10101a 40%,#0b0c12);color:var(--text)}
+    .wrap{max-width:1280px;margin:0 auto;padding:24px}.grid{display:grid;gap:16px}.grid-2{grid-template-columns:320px 1fr}.panel{background:rgba(20,20,28,.94);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 14px 40px rgba(0,0,0,.25)}
+    h1,h2,h3{margin:0 0 12px} h1{font-size:28px} h2{font-size:18px} h3{font-size:15px}.muted{color:var(--muted)}
+    label{display:block;font-size:13px;color:var(--muted);margin:10px 0 6px} input,textarea,select{width:100%;background:#0d0f16;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit}
+    input[type="color"]{height:46px;padding:6px} textarea{min-height:120px;resize:vertical}.row{display:flex;gap:10px;flex-wrap:wrap}.row > *{flex:1}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    button{appearance:none;border:0;border-radius:12px;padding:12px 14px;font:inherit;font-weight:700;cursor:pointer;background:var(--panel2);color:var(--text)} button.primary{background:linear-gradient(135deg,var(--accent),#5c7cff)} button.alt{background:linear-gradient(135deg,var(--accent2),#2ea1ff)} button.danger{background:linear-gradient(135deg,var(--danger),#ff7f4d)}
+    .list{display:grid;gap:12px}.card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#11131b}.pill{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:12px;background:#202434;color:#dbe3ff;margin-right:8px}.small{font-size:12px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}.hidden{display:none!important}
+    pre{white-space:pre-wrap;word-break:break-word;background:#0d0f16;border:1px solid var(--line);border-radius:12px;padding:10px}.status{min-height:22px}.variant{border:1px solid #23273a;border-radius:14px;padding:12px;margin-top:10px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}.tab-btn{background:#121522}.tab-btn.active{background:linear-gradient(135deg,var(--accent),#5c7cff)} .tab-panel.hidden{display:none}
+    .link-card{border:1px solid #23273a;border-radius:14px;padding:12px;background:#0f1219}.preview{margin-top:12px;border-radius:16px;border:1px solid var(--line);padding:16px;background:linear-gradient(180deg,#10131c,#0f1218)}
+    .preview-shell{border-radius:20px;padding:16px;background:var(--pv-bg,#0d0f14);color:var(--pv-text,#f7f7fb)} .preview-row{display:flex;align-items:center;gap:12px;padding:14px;border-radius:16px;background:var(--pv-surface,#1a1d27);margin-top:10px;border:1px solid var(--pv-border,#2a2d3a)}
+    .preview-icon{width:42px;height:42px;border-radius:12px;background:var(--pv-icon,#232636);display:grid;place-items:center}.preview-btn.primary{background:var(--pv-primary-bg,#fff);color:var(--pv-primary-text,#12141a)} .preview-btn.secondary{background:var(--pv-secondary-bg,#1c2230);color:var(--pv-secondary-text,#f7f7fb)} .preview-btn.neutral{background:var(--pv-neutral-bg,#161a22);color:var(--pv-neutral-text,#eaf0fb)}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}.metric{border:1px solid var(--line);border-radius:16px;padding:14px;background:#10131b}.metric .label{font-size:12px;color:var(--muted);margin-bottom:8px}.metric .value{font-size:24px;font-weight:800}.metric .sub{font-size:12px;color:var(--muted);margin-top:6px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}.table th{font-size:12px;color:var(--muted);background:#10131b;position:sticky;top:0}.table tr:last-child td{border-bottom:0}
+    .publish-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.meta-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;background:#171b27;border:1px solid var(--line);color:var(--muted)}
+    @media (max-width: 980px){.grid-2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <h1>Custom Link Hub Admin</h1>
+        <div class="muted">Manage page content, appearance, CTA rows, and split tests from one lean control surface.</div>
+      </div>
+      <div class="row" style="align-items:center;max-width:460px;justify-content:flex-end">
+        <div id="sessionState" class="pill hidden">Session unknown</div>
+        <button id="sessionRefreshBtn" class="alt hidden">Refresh Session</button>
+        <button id="logoutBtn" class="danger hidden">Log out</button>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <aside class="grid">
+        <section class="panel" id="loginPanel">
+          <h2>Admin Login</h2>
+          <label>Email</label>
+          <input id="email" type="email" placeholder="admin@example.com" />
+          <label>Password</label>
+          <input id="password" type="password" placeholder="Password" />
+          <label>Turnstile token</label>
+          <input id="turnstileToken" type="text" placeholder="Paste local dev token or real Turnstile token" />
+          <div class="actions"><button id="loginBtn" class="primary">Log in</button></div>
+        </section>
+
+        <section class="panel">
+          <h2>Page Target</h2>
+          <label>Page ID</label>
+          <input id="pageId" placeholder="page_xxx" />
+          <div class="actions">
+            <button id="loadBtn" class="alt">Load Page</button>
+            <button id="previewBtn">Open Public Page</button>
+          </div>
+          <div class="small muted">Use the same page ID across Page, Appearance, Links, and Experiments.</div>
+        </section>
+
+        <section class="panel">
+          <h2>Create Link</h2>
+          <label>Title</label>
+          <input id="newLinkTitle" placeholder="VIP Page" />
+          <label>URL</label>
+          <input id="newLinkUrl" placeholder="https://example.com" />
+          <div class="row">
+            <div>
+              <label>Icon type</label>
+              <select id="newLinkIconType"><option value="none">None</option><option value="emoji">Emoji</option><option value="image">Image URL</option></select>
+            </div>
+            <div>
+              <label>Icon value</label>
+              <input id="newLinkIconValue" placeholder="🔥 or https://..." />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Style role</label>
+              <select id="newLinkStyleRole"><option value="primary">Primary</option><option value="secondary">Secondary</option><option value="neutral">Neutral</option></select>
+            </div>
+            <div>
+              <label>Badge</label>
+              <input id="newLinkBadge" placeholder="Top pick" />
+            </div>
+          </div>
+          <label>Subtitle</label>
+          <input id="newLinkSubtitle" placeholder="Best offer first" />
+          <div class="actions"><button id="createLinkBtn" class="primary">Add Link</button></div>
+        </section>
+      </aside>
+
+      <main class="grid">
+        <section class="panel">
+          <div class="row" style="align-items:flex-end">
+            <div>
+              <h2>Workspace</h2>
+              <div class="muted">Page settings, appearance, CTA rows, then experiments.</div>
+            </div>
+            <div class="status muted" id="status"></div>
+          </div>
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="page">Page</button>
+            <button class="tab-btn" data-tab="appearance">Appearance</button>
+            <button class="tab-btn" data-tab="links">Links</button>
+            <button class="tab-btn" data-tab="experiments">Experiments</button>
+            <button class="tab-btn" data-tab="analytics">Analytics</button>
+            <button class="tab-btn" data-tab="integrations">Integrations</button>
+            <button class="tab-btn" data-tab="privacy">Privacy</button>
+          </div>
+        </section>
+
+        <section class="panel tab-panel" data-panel="page">
+          <h2>Page Settings</h2>
+          <div class="row">
+            <div><label>Title</label><input id="pageTitle" /></div>
+            <div><label>Avatar URL</label><input id="pageAvatar" /></div>
+          </div>
+          <label>Subtitle</label><input id="pageSubtitle" />
+          <div class="row">
+            <div><label>Hero CTA label</label><input id="heroLabel" /></div>
+            <div><label>Hero CTA URL</label><input id="heroUrl" /></div>
+          </div>
+          <div class="row">
+            <div><label>Announcement text</label><input id="announcementText" /></div>
+            <div><label>Announcement URL</label><input id="announcementUrl" /></div>
+          </div>
+          <div class="row">
+            <div><label>Tracking mode</label><select id="trackingMode"><option>none</option><option>ga4</option><option>meta</option><option>gtm</option><option>ga4_meta</option><option>gtm_meta</option></select></div>
+            <div><label>Privacy mode</label><select id="privacyMode"><option>default_standard</option><option>uk_strict</option><option>ca_optout_gpc</option></select></div>
+          </div>
+          <label><input id="announcementEnabled" type="checkbox" style="width:auto;margin-right:8px" /> Announcement enabled</label>
+          <div class="actions"><button id="savePageBtn" class="primary">Save Draft</button><button id="publishPageBtn" class="alt">Publish Live</button></div>
+          <div class="publish-meta">
+            <div id="pageSlugChip" class="meta-chip">Slug: —</div>
+            <div id="pageVersionChip" class="meta-chip">Published v—</div>
+          </div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="appearance">
+          <div class="row" style="align-items:flex-start">
+            <div>
+              <h2>Appearance</h2>
+              <div class="muted">Use presets or set exact tokens for the public page baseline when no experiment overrides are active.</div>
+            </div>
+            <div>
+              <label>Preset</label>
+              <select id="appearancePreset"></select>
+            </div>
+          </div>
+          <div class="row">
+            <div><label>Background</label><input id="themeBg" type="color" /></div>
+            <div><label>Surface</label><input id="themeSurface" type="color" /></div>
+            <div><label>Text</label><input id="themeText" type="color" /></div>
+            <div><label>Muted</label><input id="themeMuted" type="color" /></div>
+          </div>
+          <div class="row">
+            <div><label>Accent</label><input id="themeAccent" type="color" /></div>
+            <div><label>Border</label><input id="themeBorder" type="color" /></div>
+            <div><label>Icon BG</label><input id="themeIconBg" type="color" /></div>
+            <div><label>Row gap</label><input id="themeGap" placeholder="14px" /></div>
+          </div>
+          <div class="row">
+            <div><label>Primary button BG</label><input id="themePrimaryBg" type="color" /></div>
+            <div><label>Primary button Text</label><input id="themePrimaryText" type="color" /></div>
+            <div><label>Secondary button BG</label><input id="themeSecondaryBg" type="color" /></div>
+            <div><label>Secondary button Text</label><input id="themeSecondaryText" type="color" /></div>
+          </div>
+          <div class="row">
+            <div><label>Neutral button BG</label><input id="themeNeutralBg" type="color" /></div>
+            <div><label>Neutral button Text</label><input id="themeNeutralText" type="color" /></div>
+            <div><label>Font body</label><input id="themeFontBody" placeholder='Inter, system-ui, sans-serif' /></div>
+            <div><label>Font heading</label><input id="themeFontHeading" placeholder='Inter, system-ui, sans-serif' /></div>
+          </div>
+          <div class="actions"><button id="saveAppearanceBtn" class="primary">Save Appearance</button></div>
+          <div class="preview">
+            <h3>Preview</h3>
+            <div id="appearancePreview" class="preview-shell"></div>
+          </div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="links">
+          <h2>Links Manager</h2>
+          <div class="muted">Big CTA rows should be obvious and easy to scan. Move your money buttons to the top.</div>
+          <div class="actions"><button id="saveOrderBtn">Save Current Order</button></div>
+          <div id="linksList" class="list"></div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="experiments">
+          <div class="row" style="align-items:flex-end">
+            <div><h2>Experiments</h2><div class="muted">One live experiment per page. Starting one auto-pauses other live experiments.</div></div>
+          </div>
+          <div class="actions"><button id="generateBtn">Generate Variant JSON</button></div>
+          <div class="row">
+            <div><label>Name</label><input id="newName" placeholder="April CTA palette test" /></div>
+            <div><label>Assignment TTL days</label><input id="newTtl" type="number" min="1" max="180" value="30" /></div>
+            <div><label>Variant count</label><input id="variantCount" type="number" min="1" max="6" value="2" /></div>
+          </div>
+          <label>Variants JSON</label><textarea id="newVariants"></textarea>
+          <div class="actions"><button id="createBtn" class="primary">Create Experiment</button></div>
+          <div id="experiments" class="list"></div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="analytics">
+          <div class="row" style="align-items:flex-end">
+            <div>
+              <h2>Analytics</h2>
+              <div class="muted">Fast decision views from first-party events. External tags remain secondary.</div>
+            </div>
+            <div class="row" style="max-width:340px">
+              <div>
+                <label>Window</label>
+                <select id="analyticsWindow">
+                  <option value="7">Last 7 days</option>
+                  <option value="30" selected>Last 30 days</option>
+                  <option value="90">Last 90 days</option>
+                </select>
+              </div>
+              <div style="display:flex;align-items:end">
+                <button id="refreshAnalyticsBtn" class="alt">Refresh</button>
+              </div>
+            </div>
+          </div>
+          <div id="analyticsSummary" class="metrics"></div>
+          <div class="grid" style="margin-top:16px">
+            <div class="card">
+              <h3>Top CTA Rows</h3>
+              <div id="analyticsLinks" class="table-wrap"></div>
+            </div>
+            <div class="card">
+              <h3>Traffic Sources</h3>
+              <div id="analyticsSources" class="table-wrap"></div>
+            </div>
+            <div class="card">
+              <h3>Experiment Variants</h3>
+              <div id="analyticsExperiments" class="table-wrap"></div>
+            </div>
+            <div class="card">
+              <h3>Destination Domains</h3>
+              <div id="analyticsDestinations" class="table-wrap"></div>
+            </div>
+            <div class="card">
+              <h3>Source × Variant Matrix</h3>
+              <div id="analyticsMatrix" class="table-wrap"></div>
+            </div>
+            <div class="card">
+              <h3>Consent by Region</h3>
+              <div id="analyticsConsent" class="table-wrap"></div>
+            </div>
+            <div class="card">
+              <div class="row" style="align-items:flex-end">
+                <div>
+                  <h3>Winner Recommendation</h3>
+                  <div class="small muted">Heuristic guidance only. First-party events remain the decision source.</div>
+                </div>
+                <div style="display:flex;align-items:end">
+                  <button id="refreshRecommendationBtn" class="alt">Refresh</button>
+                </div>
+              </div>
+              <div id="analyticsRecommendation" class="table-wrap"></div>
+            </div>
+            <div class="card">
+              <div class="row" style="align-items:flex-end">
+                <div>
+                  <h3>Ad Spend Input</h3>
+                  <div class="small muted">Manual spend lets you compare click volume against out-of-pocket traffic cost without slowing the public page.</div>
+                </div>
+              </div>
+              <div class="row">
+                <div><label>Spend date</label><input id="spendDate" type="date" /></div>
+                <div><label>Source</label><input id="spendSource" placeholder="facebook" /></div>
+                <div><label>Medium</label><input id="spendMedium" placeholder="cpc" /></div>
+              </div>
+              <div class="row">
+                <div><label>Variant ID</label><input id="spendVariantId" placeholder="var_xxx (optional)" /></div>
+                <div><label>Amount (USD)</label><input id="spendAmount" type="number" min="0" step="0.01" placeholder="25.00" /></div>
+              </div>
+              <label>Note</label><input id="spendNote" placeholder="Ad set A / warm audience" />
+              <div class="actions"><button id="saveSpendBtn" class="primary">Save Spend</button></div>
+              <div id="analyticsSpend" class="table-wrap" style="margin-top:14px"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="integrations">
+          <h2>Integrations</h2>
+          <div class="muted">Save provider settings here. Public forwarding remains privacy-gated and first-party events stay the source of truth.</div>
+          <div class="grid" style="margin-top:14px">
+            <div class="card">
+              <div class="row"><div><h3>GA4</h3><div class="small muted">Direct Google Analytics 4</div></div><div><label><input id="ga4Enabled" type="checkbox" style="width:auto;margin-right:8px" />Enabled</label></div></div>
+              <label>Measurement ID</label><input id="ga4MeasurementId" placeholder="G-XXXXXXXXXX" />
+              <div class="row"><div><label><input id="ga4PageViews" type="checkbox" style="width:auto;margin-right:8px" />Track page views</label></div><div><label><input id="ga4ClickEvents" type="checkbox" style="width:auto;margin-right:8px" />Track click events</label></div><div><label><input id="ga4ExperimentParams" type="checkbox" style="width:auto;margin-right:8px" />Experiment params</label></div></div>
+            </div>
+            <div class="card">
+              <div class="row"><div><h3>Meta Pixel</h3><div class="small muted">Direct browser pixel</div></div><div><label><input id="metaEnabled" type="checkbox" style="width:auto;margin-right:8px" />Enabled</label></div></div>
+              <label>Pixel ID</label><input id="metaPixelId" placeholder="123456789012345" />
+              <label>Event mappings JSON</label><textarea id="metaEventMappings" placeholder='{"page_view":"PageView","hero_cta_click":"ViewContent"}'></textarea>
+            </div>
+            <div class="card">
+              <div class="row"><div><h3>Google Tag Manager</h3><div class="small muted">Container-driven tags</div></div><div><label><input id="gtmEnabled" type="checkbox" style="width:auto;margin-right:8px" />Enabled</label></div></div>
+              <label>Container ID</label><input id="gtmContainerId" placeholder="GTM-XXXXXXX" />
+              <label><input id="gtmAdvertisingEnabled" type="checkbox" style="width:auto;margin-right:8px" />Treat GTM as advertising-capable</label>
+            </div>
+            <div class="card">
+              <div class="row"><div><h3>Cloudflare Web Analytics</h3><div class="small muted">Privacy-first overlay only</div></div><div><label><input id="cfwaEnabled" type="checkbox" style="width:auto;margin-right:8px" />Enabled</label></div></div>
+              <label><input id="cfwaOverlayEnabled" type="checkbox" style="width:auto;margin-right:8px" />Use as lightweight overlay only</label>
+            </div>
+          </div>
+          <div class="actions"><button id="saveIntegrationsBtn" class="primary">Save Integrations</button></div>
+        </section>
+
+        <section class="panel tab-panel hidden" data-panel="privacy">
+          <h2>Privacy UI</h2>
+          <div class="muted">Edit the public consent copy and choices label without touching code. Region policy mode itself stays under Page Settings.</div>
+          <div class="row">
+            <div><label>Banner version</label><input id="privacyBannerVersion" placeholder="v1" /></div>
+            <div><label>Privacy choices label</label><input id="privacyChoicesLabel" placeholder="Your Privacy Choices" /></div>
+          </div>
+          <div class="row">
+            <div><label>Banner title</label><input id="privacyBannerTitle" /></div>
+            <div><label>Footer note</label><input id="privacyFooterNote" placeholder="Fast, privacy-aware link hub" /></div>
+          </div>
+          <label>Banner body</label><textarea id="privacyBannerBody"></textarea>
+          <div class="row">
+            <div><label>Accept label</label><input id="privacyAcceptLabel" placeholder="Allow" /></div>
+            <div><label>Analytics-only label</label><input id="privacyAnalyticsOnlyLabel" placeholder="Analytics only" /></div>
+            <div><label>Decline label</label><input id="privacyDeclineLabel" placeholder="Decline" /></div>
+          </div>
+          <div class="row">
+            <div><label>GPC title</label><input id="privacyGpcTitle" placeholder="Global Privacy Control detected" /></div>
+            <div><label><input id="privacyHonorGpc" type="checkbox" style="width:auto;margin-right:8px" />Honor GPC preference</label></div>
+          </div>
+          <label>GPC body</label><textarea id="privacyGpcBody"></textarea>
+          <div class="actions"><button id="savePrivacyBtn" class="primary">Save Privacy UI</button></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>

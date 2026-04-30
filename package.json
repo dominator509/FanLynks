@@ -1,0 +1,21 @@
+{
+  "name": "custom-link-hub-v5-starter",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler pages dev public --compatibility-date=2026-04-07",
+    "deploy": "wrangler pages deploy public",
+    "typecheck": "tsc --noEmit",
+    "seed:generate": "node scripts/generate-dev-seed.mjs",
+    "seed:show": "node scripts/generate-dev-seed.mjs --stdout",
+    "hash:password": "node scripts/generate-password-hash.mjs",
+    "smoke": "node scripts/smoke-test.mjs",
+    "deploy:check": "node scripts/check-deploy-ready.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "wrangler": "^4.10.0",
+    "@cloudflare/workers-types": "^4.20260405.0"
+  }
+}

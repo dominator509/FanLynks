@@ -1,0 +1,16 @@
+name = "custom-link-hub-v5"
+compatibility_date = "2026-04-07"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "custom-link-hub"
+database_id = "2ce54591-6878-4e48-aecb-b063d722f1c1"
+
+[[kv_namespaces]]
+binding = "PAGE_CACHE"
+id = "d929ea11f8ed4822bec7be8be5ea6df4"
+preview_id = "ae2ddd1f224f4a47800e15bee797b058"
+
+[vars]
+APP_NAME = "Custom Link Hub"
