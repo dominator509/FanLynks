@@ -1,9 +1,23 @@
 import { errorJson, json, readJson } from '../../../_utils';
-import { parseSessionCookie } from '../../../../../src/server/auth/session';
+import { validateAdminSession } from '../../../../../src/server/auth/session';
 import { buildPublishedPagePayloadById } from '../../../../../src/server/page/payload';
+import {
+  normalizeOptionalPublicUrl,
+  normalizeOptionalText,
+  normalizePrivacyMode,
+  normalizePublicUrl,
+  normalizeText,
+  normalizeTrackingMode,
+  sanitizePrivacyUi,
+  sanitizeThemeTokens
+} from '../../../../../src/server/security/validation';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   if (!session) return errorJson('Unauthorized.', 401);
 
   const pageId = context.params.pageId as string;
@@ -54,7 +68,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 };
 
 export const onRequestPut: PagesFunction<Env> = async (context) => {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   if (!session) return errorJson('Unauthorized.', 401);
 
   const pageId = context.params.pageId as string;
@@ -65,11 +83,28 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
   if (!existing) return errorJson('Page not found.', 404);
   if (existing.tenant_id !== session.tenantId) return errorJson('Forbidden.', 403);
 
-  const title = typeof body.title === 'string' ? body.title.trim() : null;
+  const title = normalizeText(body.title, 120);
   if (!title) return errorJson('Title is required.', 400);
 
-  const themeTokens = body.themeTokens && typeof body.themeTokens === 'object' ? JSON.stringify(body.themeTokens) : null;
-  const privacyUi = body.privacyUi && typeof body.privacyUi === 'object' ? JSON.stringify(body.privacyUi) : null;
+  let avatarUrl: string | null = null;
+  let announcementUrl: string | null = null;
+  let heroCtaUrl: string | null = null;
+
+  try {
+    avatarUrl = normalizeOptionalPublicUrl(body.avatarUrl);
+    announcementUrl = normalizeOptionalPublicUrl(body.announcementUrl);
+    heroCtaUrl = normalizeOptionalPublicUrl(body.heroCtaUrl);
+    if (body.avatarUrl && !avatarUrl) throw new Error('Avatar URL must be an http or https URL.');
+    if (body.announcementUrl && !announcementUrl) throw new Error('Announcement URL must be an http or https URL.');
+    if (body.heroCtaUrl && !heroCtaUrl) throw new Error('Hero CTA URL must be an http or https URL.');
+    if (body.announcementEnabled && body.announcementText && !announcementUrl) normalizePublicUrl(body.announcementUrl, 'Announcement URL');
+    if (body.heroCtaLabel && !heroCtaUrl) normalizePublicUrl(body.heroCtaUrl, 'Hero CTA URL');
+  } catch (error) {
+    return errorJson(error instanceof Error ? error.message : 'Invalid URL.', 400);
+  }
+
+  const themeTokens = JSON.stringify(sanitizeThemeTokens(body.themeTokens));
+  const privacyUi = JSON.stringify(sanitizePrivacyUi(body.privacyUi));
 
   await context.env.DB.prepare(`
     UPDATE pages
@@ -89,15 +124,15 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     WHERE id = ?
   `).bind(
     title,
-    typeof body.subtitle === 'string' ? body.subtitle : null,
-    typeof body.avatarUrl === 'string' ? body.avatarUrl : null,
+    normalizeOptionalText(body.subtitle, 240),
+    avatarUrl,
     body.announcementEnabled ? 1 : 0,
-    typeof body.announcementText === 'string' ? body.announcementText : null,
-    typeof body.announcementUrl === 'string' ? body.announcementUrl : null,
-    typeof body.heroCtaLabel === 'string' ? body.heroCtaLabel : null,
-    typeof body.heroCtaUrl === 'string' ? body.heroCtaUrl : null,
-    typeof body.trackingMode === 'string' ? body.trackingMode : 'none',
-    typeof body.privacyMode === 'string' ? body.privacyMode : 'default_standard',
+    normalizeOptionalText(body.announcementText, 120),
+    announcementUrl,
+    normalizeOptionalText(body.heroCtaLabel, 60),
+    heroCtaUrl,
+    normalizeTrackingMode(body.trackingMode),
+    normalizePrivacyMode(body.privacyMode),
     themeTokens,
     privacyUi,
     new Date().toISOString(),

@@ -1,3 +1,56 @@
+function applySecurityHeaders(request: Request, response: Response): Response {
+  const url = new URL(request.url);
+  const headers = new Headers(response.headers);
+  const isAdmin = url.pathname === '/admin.html' || url.pathname.startsWith('/api/admin/');
+
+  headers.set('X-Content-Type-Options', 'nosniff');
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  headers.set('X-Frame-Options', 'DENY');
+  headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+  headers.set('Content-Security-Policy', [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "img-src 'self' https: data:",
+    "font-src 'self' data:",
+    "style-src 'self' 'unsafe-inline'",
+    "script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://challenges.cloudflare.com",
+    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://challenges.cloudflare.com",
+    "frame-src https://challenges.cloudflare.com",
+    "upgrade-insecure-requests"
+  ].join('; '));
+
+  if (isAdmin) {
+    headers.set('Cache-Control', 'no-store');
+    headers.set('Pragma', 'no-cache');
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
 export const onRequest: PagesFunction = async (context) => {
-  return context.next();
+  try {
+    const response = await context.next();
+    return applySecurityHeaders(context.request, response);
+  } catch (error) {
+    const status = typeof (error as { status?: unknown })?.status === 'number'
+      ? (error as { status: number }).status
+      : 500;
+    const message = error instanceof Error && status < 500 ? error.message : 'Request failed.';
+
+    return applySecurityHeaders(
+      context.request,
+      new Response(JSON.stringify({ ok: false, error: message }), {
+        status,
+        headers: { 'content-type': 'application/json; charset=utf-8' }
+      })
+    );
+  }
 };

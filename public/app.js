@@ -256,7 +256,7 @@
     dom.subtitle.textContent = state.page.subtitle || '';
     dom.subtitle.hidden = !state.page.subtitle;
 
-    if (state.page.avatarUrl) {
+    if (safeHttpUrl(state.page.avatarUrl)) {
       dom.avatar.src = state.page.avatarUrl;
       dom.avatar.alt = state.page.title || 'Avatar';
       dom.avatar.style.display = 'block';
@@ -264,7 +264,7 @@
       dom.avatar.style.display = 'none';
     }
 
-    if (state.page.announcementEnabled && state.page.announcementText && state.page.announcementUrl) {
+    if (state.page.announcementEnabled && state.page.announcementText && safeHttpUrl(state.page.announcementUrl)) {
       dom.announcement.hidden = false;
       dom.announcement.style.display = 'flex';
       dom.announcement.href = state.page.announcementUrl;
@@ -278,7 +278,7 @@
       dom.announcement.style.display = 'none';
     }
 
-    if (state.page.heroCtaLabel && state.page.heroCtaUrl) {
+    if (state.page.heroCtaLabel && safeHttpUrl(state.page.heroCtaUrl)) {
       dom.heroCta.hidden = false;
       dom.heroCta.textContent = state.page.heroCtaLabel;
       dom.heroCta.href = state.page.heroCtaUrl;
@@ -327,7 +327,9 @@
     [...links].sort((a, b) => a.rowOrder - b.rowOrder).forEach((link, index) => {
       const row = document.createElement('a');
       row.className = `link-row ${link.styleRole || 'secondary'}`;
-      row.href = link.url;
+      const safeUrl = safeHttpUrl(link.url);
+      if (!safeUrl) return;
+      row.href = safeUrl;
       row.rel = 'noopener noreferrer';
       row.dataset.linkId = link.id;
       row.dataset.sectionId = link.sectionId || '';
@@ -337,14 +339,15 @@
         link_id: link.id,
         section_id: link.sectionId,
         row_index: link.rowOrder ?? index + 1,
-        destination_url: link.url
+        destination_url: safeUrl
       });
 
       const icon = document.createElement('div');
       icon.className = 'icon-slot';
-      if (link.iconType === 'image' && link.iconValue) {
+      const safeIconUrl = link.iconType === 'image' ? safeHttpUrl(link.iconValue) : null;
+      if (safeIconUrl) {
         const img = document.createElement('img');
-        img.src = link.iconValue;
+        img.src = safeIconUrl;
         img.alt = '';
         icon.appendChild(img);
       } else if (link.iconType === 'emoji' && link.iconValue) {
@@ -556,7 +559,8 @@
     if (!anchor || !payload.destination_url) return;
 
     event.preventDefault();
-    const href = payload.destination_url;
+    const href = safeHttpUrl(payload.destination_url);
+    if (!href) return;
     const isNewTab = event.metaKey || event.ctrlKey || event.shiftKey || anchor.target === '_blank' || event.button === 1;
 
     try {
@@ -695,6 +699,16 @@
 
   function getDomain(url) {
     try { return new URL(url).hostname; } catch { return null; }
+  }
+
+  function safeHttpUrl(value) {
+    if (typeof value !== 'string') return null;
+    try {
+      const url = new URL(value, window.location.origin);
+      return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : null;
+    } catch {
+      return null;
+    }
   }
 
   function escapeHtml(value) {

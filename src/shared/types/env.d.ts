@@ -1,4 +1,5 @@
 interface Env {
+  ASSETS: Fetcher;
   DB: D1Database;
   PAGE_CACHE: KVNamespace;
   SESSION_SECRET: string;

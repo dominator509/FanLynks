@@ -43,11 +43,12 @@
         <section class="panel" id="loginPanel">
           <h2>Admin Login</h2>
           <label>Email</label>
-          <input id="email" type="email" placeholder="admin@example.com" />
+          <input id="email" type="email" placeholder="admin@custom-link-hub.local" />
           <label>Password</label>
           <input id="password" type="password" placeholder="Password" />
-          <label>Turnstile token</label>
-          <input id="turnstileToken" type="text" placeholder="Paste local dev token or real Turnstile token" />
+          <label>Turnstile</label>
+          <div id="turnstileWidget" style="min-height:72px"></div>
+          <input id="turnstileToken" type="hidden" />
           <div class="actions"><button id="loginBtn" class="primary">Log in</button></div>
         </section>
 
@@ -67,7 +68,7 @@
           <label>Title</label>
           <input id="newLinkTitle" placeholder="VIP Page" />
           <label>URL</label>
-          <input id="newLinkUrl" placeholder="https://example.com" />
+          <input id="newLinkUrl" placeholder="https://custom-link-hub-v5.pages.dev/home" />
           <div class="row">
             <div>
               <label>Icon type</label>
@@ -130,7 +131,7 @@
             <div><label>Announcement URL</label><input id="announcementUrl" /></div>
           </div>
           <div class="row">
-            <div><label>Tracking mode</label><select id="trackingMode"><option>none</option><option>ga4</option><option>meta</option><option>gtm</option><option>ga4_meta</option><option>gtm_meta</option></select></div>
+            <div><label>Tracking mode</label><select id="trackingMode"><option>none</option><option>first_party</option><option>ga4</option><option>meta</option><option>gtm</option><option>ga4_meta</option><option>gtm_meta</option></select></div>
             <div><label>Privacy mode</label><select id="privacyMode"><option>default_standard</option><option>uk_strict</option><option>ca_optout_gpc</option></select></div>
           </div>
           <label><input id="announcementEnabled" type="checkbox" style="width:auto;margin-right:8px" /> Announcement enabled</label>
@@ -280,7 +281,8 @@
                 <div><label>Amount (USD)</label><input id="spendAmount" type="number" min="0" step="0.01" placeholder="25.00" /></div>
               </div>
               <label>Note</label><input id="spendNote" placeholder="Ad set A / warm audience" />
-              <div class="actions"><button id="saveSpendBtn" class="primary">Save Spend</button></div>
+              <input id="spendEditId" type="hidden" />
+              <div class="actions"><button id="saveSpendBtn" class="primary">Save Spend</button><button id="cancelSpendEditBtn" class="hidden">Cancel Edit</button></div>
               <div id="analyticsSpend" class="table-wrap" style="margin-top:14px"></div>
             </div>
           </div>

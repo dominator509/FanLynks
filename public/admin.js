@@ -31,7 +31,7 @@ const EXP_PRESETS = [
 ];
 
 const els = {
-  email: $('email'), password: $('password'), turnstileToken: $('turnstileToken'), loginBtn: $('loginBtn'), logoutBtn: $('logoutBtn'), loginPanel: $('loginPanel'),
+  email: $('email'), password: $('password'), turnstileToken: $('turnstileToken'), turnstileWidget: $('turnstileWidget'), loginBtn: $('loginBtn'), logoutBtn: $('logoutBtn'), loginPanel: $('loginPanel'),
   pageId: $('pageId'), loadBtn: $('loadBtn'), previewBtn: $('previewBtn'), status: $('status'),
   pageTitle: $('pageTitle'), pageSubtitle: $('pageSubtitle'), pageAvatar: $('pageAvatar'), heroLabel: $('heroLabel'), heroUrl: $('heroUrl'),
   announcementEnabled: $('announcementEnabled'), announcementText: $('announcementText'), announcementUrl: $('announcementUrl'), trackingMode: $('trackingMode'), privacyMode: $('privacyMode'), savePageBtn: $('savePageBtn'), publishPageBtn: $('publishPageBtn'), pageSlugChip: $('pageSlugChip'), pageVersionChip: $('pageVersionChip'),
@@ -59,6 +59,8 @@ const state = {
   lastInteractionAt: Date.now(),
   dirty: false
 };
+
+let turnstileWidgetId = null;
 
 function setStatus(message, isError = false) {
   els.status.textContent = message || '';
@@ -313,15 +315,15 @@ async function loadAnalytics() {
 }
 
 function resetSpendForm() {
-  els.spendEditId.value = '';
+  if (els.spendEditId) els.spendEditId.value = '';
   if (els.cancelSpendEditBtn) els.cancelSpendEditBtn.classList.add('hidden');
   if (els.saveSpendBtn) els.saveSpendBtn.textContent = 'Save Spend Entry';
   if (els.spendDate && !els.spendDate.value) els.spendDate.value = new Date().toISOString().slice(0, 10);
-  els.spendSource.value = '';
-  els.spendMedium.value = '';
-  els.spendVariantId.value = '';
-  els.spendAmount.value = '';
-  els.spendNote.value = '';
+  if (els.spendSource) els.spendSource.value = '';
+  if (els.spendMedium) els.spendMedium.value = '';
+  if (els.spendVariantId) els.spendVariantId.value = '';
+  if (els.spendAmount) els.spendAmount.value = '';
+  if (els.spendNote) els.spendNote.value = '';
 }
 
 function editSpendEntry(id) {
@@ -587,6 +589,69 @@ async function checkSession(refresh = false) {
   }
 }
 
+async function refreshSessionManually() {
+  setStatus('Refreshing session...');
+  await checkSession(true);
+  if (state.sessionInfo?.authenticated && state.sessionInfo?.refreshed) {
+    await checkSession(false);
+    setStatus('Session refreshed.');
+    return;
+  }
+  if (state.sessionInfo?.authenticated) {
+    setStatus('Session is still active.');
+  }
+}
+
+async function loadTurnstile() {
+  if (!els.turnstileWidget) return;
+  try {
+    const config = await api('/api/admin/config', { method: 'GET', headers: {} });
+    if (!config.turnstileSiteKey) {
+      els.turnstileWidget.textContent = 'Turnstile site key is not configured.';
+      return;
+    }
+
+    await loadTurnstileScript();
+    if (!window.turnstile || turnstileWidgetId !== null) return;
+    turnstileWidgetId = window.turnstile.render(els.turnstileWidget, {
+      sitekey: config.turnstileSiteKey,
+      action: 'admin_login',
+      callback: (token) => { els.turnstileToken.value = token; },
+      'expired-callback': () => { els.turnstileToken.value = ''; },
+      'error-callback': () => { els.turnstileToken.value = ''; }
+    });
+  } catch (error) {
+    els.turnstileWidget.textContent = error.message || 'Unable to load Turnstile.';
+  }
+}
+
+function loadTurnstileScript() {
+  if (window.turnstile) return Promise.resolve();
+  const existing = document.querySelector('script[data-turnstile="1"]');
+  if (existing) {
+    return new Promise((resolve, reject) => {
+      existing.addEventListener('load', resolve, { once: true });
+      existing.addEventListener('error', reject, { once: true });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.dataset.turnstile = '1';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+function resetTurnstile() {
+  els.turnstileToken.value = '';
+  if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+}
+
 async function maybeRefreshSession() {
   if (!state.sessionInfo?.authenticated) return;
   const ms = expiresInMs(state.sessionInfo.user?.expiresAt);
@@ -598,18 +663,21 @@ async function maybeRefreshSession() {
 async function login() {
   setStatus('Logging in...');
   try {
+    const token = els.turnstileToken.value.trim();
+    if (!token) throw new Error('Complete the Turnstile challenge first.');
     await api('/api/admin/login', {
       method: 'POST',
       body: JSON.stringify({
         email: els.email.value.trim(),
         password: els.password.value,
-        turnstileToken: els.turnstileToken.value.trim() || 'local-dev-token'
+        turnstileToken: token
       })
     });
     await checkSession();
     setStatus('Logged in.');
   } catch (error) {
     setStatus(error.message, true);
+    resetTurnstile();
   }
 }
 
@@ -1013,7 +1081,7 @@ function wire() {
   if (els.refreshRecommendationBtn) els.refreshRecommendationBtn.onclick = () => loadAnalytics();
   if (els.saveSpendBtn) els.saveSpendBtn.onclick = saveSpendEntry;
   if (els.cancelSpendEditBtn) els.cancelSpendEditBtn.onclick = resetSpendForm;
-  if (els.sessionRefreshBtn) els.sessionRefreshBtn.onclick = () => checkSession(true);
+  if (els.sessionRefreshBtn) els.sessionRefreshBtn.onclick = refreshSessionManually;
   if (els.analyticsWindow) els.analyticsWindow.onchange = () => { if (currentPageId()) loadAnalytics(); };
   els.tabButtons.forEach((btn) => btn.onclick = () => switchTab(btn.dataset.tab));
   els.appearancePreset.onchange = applyPreset;
@@ -1027,6 +1095,7 @@ resetSpendForm();
 wire();
 ['click','keydown','pointerdown'].forEach((eventName) => window.addEventListener(eventName, touchInteraction, { passive: true }));
 checkSession();
+loadTurnstile();
 setInterval(maybeRefreshSession, 60_000);
 switchTab('page');
 renderAppearancePreview();

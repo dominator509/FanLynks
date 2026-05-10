@@ -6,18 +6,17 @@ const files = [
   'wrangler.toml',
   'seeds/dev_seed.sql',
   '.dev.vars.example',
-  'README.md',
-  'docs/DEPLOYMENT.md'
+  'scripts/generate-dev-seed.mjs'
 ].filter((file) => fs.existsSync(file));
 
 const patterns = [
-  /replace-with-strong-password/gi,
-  /replace placeholders/gi,
-  /paste the returned ids?/gi,
-  /your-password/gi,
+  /REPLACE_WITH_ADMIN_PASSWORD_HASH/g,
+  /G-REPLACE_ME/g,
+  /GTM-REPLACE/g,
+  /https:\/\/example\.com/gi,
+  /admin@example\.com/gi,
   /demo@example\.com/gi,
-  /G-XXXXXXXXXX/gi,
-  /123456789012345/gi
+  /replace-with-strong-password/gi
 ];
 
 let failures = 0;

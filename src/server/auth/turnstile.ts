@@ -14,12 +14,30 @@ interface TurnstileSiteverifyResponse {
   hostname?: string;
 }
 
+export function isKnownTurnstileTestKey(value: string | null | undefined): boolean {
+  return typeof value === 'string' && /^[123]x0{10,}(?:AA|AB|FF)$/.test(value.trim());
+}
+
 export async function verifyTurnstileToken(args: {
   secretKey: string;
   token: string;
   ip?: string | null;
   expectedAction?: string;
 }): Promise<TurnstileVerificationResult> {
+  if (!args.secretKey || !args.token) {
+    return {
+      ok: false,
+      errors: ['missing_turnstile_secret_or_token']
+    };
+  }
+
+  if (isKnownTurnstileTestKey(args.secretKey)) {
+    return {
+      ok: false,
+      errors: ['turnstile_test_secret_not_allowed']
+    };
+  }
+
   const body = new URLSearchParams();
   body.set('secret', args.secretKey);
   body.set('response', args.token);
@@ -42,7 +60,7 @@ export async function verifyTurnstileToken(args: {
 
   const payload = (await response.json()) as TurnstileSiteverifyResponse;
   const errors = payload['error-codes'] ?? [];
-  const actionMismatch = args.expectedAction && payload.action && payload.action !== args.expectedAction;
+  const actionMismatch = args.expectedAction && payload.action !== args.expectedAction;
 
   return {
     ok: Boolean(payload.success) && !actionMismatch,

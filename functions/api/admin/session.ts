@@ -1,15 +1,20 @@
 import { json, setCookieHeaders } from '../_utils';
-import { createSessionCookie, parseSessionCookie } from '../../../src/server/auth/session';
+import { createSessionCookie, validateAdminSession } from '../../../src/server/auth/session';
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   const refresh = new URL(context.request.url).searchParams.get('refresh') === '1';
 
   const headers = session && refresh
     ? setCookieHeaders(await createSessionCookie({
         userId: session.userId,
         tenantId: session.tenantId,
-        email: session.email
+        email: session.email,
+        sessionVersion: session.sessionVersion
       }, context.env.SESSION_SECRET))
     : undefined;
 

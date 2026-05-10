@@ -2,7 +2,9 @@
 
 - `dev_seed.sql` is a generated starter seed for local or remote D1.
 - Re-generate it with `npm run seed:generate`.
-- Generate a real PBKDF2 password hash with `npm run hash:password -- "your-password"` and replace the placeholder hash before executing the seed.
+- By default, the generated admin user is inactive and third-party integrations are disabled.
+- To generate a login-ready seed, set `ADMIN_EMAIL` and `ADMIN_PASSWORD_HASH` before running `npm run seed:generate`.
+- Generate a real PBKDF2 password hash with `npm run hash:password -- "your-password"`.
 - Apply locally with:
 
 ```bash

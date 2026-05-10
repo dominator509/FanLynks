@@ -1,9 +1,21 @@
 import { errorJson, json, readJson } from '../../../../_utils';
-import { parseSessionCookie } from '../../../../../../src/server/auth/session';
+import { validateAdminSession } from '../../../../../../src/server/auth/session';
 import { makeId } from '../../../../../../src/server/db/ids';
+import {
+  normalizeIcon,
+  normalizeIsoDate,
+  normalizeOptionalText,
+  normalizePublicUrl,
+  normalizeStyleRole,
+  normalizeText
+} from '../../../../../../src/server/security/validation';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   if (!session) return errorJson('Unauthorized.', 401);
 
   const pageId = context.params.pageId as string;
@@ -14,9 +26,17 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (!page) return errorJson('Page not found.', 404);
   if (page.tenant_id !== session.tenantId) return errorJson('Forbidden.', 403);
 
-  const title = typeof body.title === 'string' ? body.title.trim() : '';
-  const url = typeof body.url === 'string' ? body.url.trim() : '';
-  if (!title || !url) return errorJson('Title and URL are required.', 400);
+  const title = normalizeText(body.title, 120);
+  let url: string;
+  let icon: { iconType: 'emoji' | 'image' | 'none'; iconValue: string | null };
+  try {
+    url = normalizePublicUrl(body.url);
+    icon = normalizeIcon({ iconType: body.iconType, iconValue: body.iconValue });
+  } catch (error) {
+    return errorJson(error instanceof Error ? error.message : 'Invalid link payload.', 400);
+  }
+
+  if (!title) return errorJson('Title and URL are required.', 400);
 
   const orderRow = await context.env.DB.prepare('SELECT COALESCE(MAX(row_order), 0) AS max_row_order FROM page_links WHERE page_id = ?').bind(pageId).first<{ max_row_order: number }>();
   const rowOrder = Number.isFinite(Number(body.rowOrder)) ? Math.max(1, Math.floor(Number(body.rowOrder))) : (Number(orderRow?.max_row_order || 0) + 1);
@@ -33,16 +53,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     pageId,
     typeof body.sectionId === 'string' ? body.sectionId : null,
     title,
-    typeof body.subtitle === 'string' ? body.subtitle : null,
+    normalizeOptionalText(body.subtitle, 180),
     url,
-    body.iconType === 'emoji' || body.iconType === 'image' ? body.iconType : 'none',
-    typeof body.iconValue === 'string' ? body.iconValue : null,
-    typeof body.badgeText === 'string' ? body.badgeText : null,
-    body.styleRole === 'primary' || body.styleRole === 'secondary' ? body.styleRole : 'neutral',
+    icon.iconType,
+    icon.iconValue,
+    normalizeOptionalText(body.badgeText, 48),
+    normalizeStyleRole(body.styleRole),
     rowOrder,
     body.isEnabled === false ? 0 : 1,
-    typeof body.startAt === 'string' ? body.startAt : null,
-    typeof body.endAt === 'string' ? body.endAt : null,
+    normalizeIsoDate(body.startAt),
+    normalizeIsoDate(body.endAt),
     now,
     now
   ).run();

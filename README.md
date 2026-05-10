@@ -1,6 +1,6 @@
-# Custom Link Hub v5 Repo Starter Pack
+# Custom Link Hub v5
 
-This starter pack turns the approved v5 build spec into a repo-shaped foundation for implementation.
+Custom Link Hub is a deployed Cloudflare Pages/Functions project for a mobile-first link hub with first-party analytics, privacy-aware tracking, split-test architecture, and admin editing.
 
 Included:
 - Cloudflare Pages/Workers-friendly repo structure
@@ -10,10 +10,9 @@ Included:
 - Pages Functions stubs plus implemented auth/session/page publish path for core public/admin/privacy/event routes
 - public page runtime that fetches the live page payload and renders the one-page shell
 - client-side tracking dispatcher that only forwards to GA4 / Meta / GTM when the API says it is allowed
-- TypeScript/shared type placeholders
-- Wrangler config starter
+- TypeScript/shared type definitions
+- Wrangler config for the deployed Cloudflare resources
 
-This is intentionally a **starter scaffold**, not a finished application.
 It is optimized for:
 - low drift
 - agent-friendly development
@@ -77,8 +76,8 @@ You can add actual browser tag dispatch hardening or server-side forwarding late
 4. Verify public page render at `/your-slug` or `/?slug=your-slug`
 5. Verify `page_view` / click events persist through `POST /api/events`
 6. Verify returned forwarding plans gate GA4 / Meta / GTM correctly
-7. Flesh out links/appearance admin APIs and UI
-8. Expand privacy engine and privacy UI flows
+7. Replace seed/demo page content with final production copy and destinations
+8. Complete any required state-specific privacy UI/legal review
 9. Add dashboard rollups + promote-winner-to-base workflow
 
 
@@ -105,7 +104,7 @@ npm run dev
 npm run deploy
 npm run seed:generate
 npm run seed:show
-npm run hash:password -- 'your-password'
+npm run hash:password -- 'replace-with-a-strong-admin-password'
 ```
 
 ## Expected bindings / secrets
@@ -161,8 +160,8 @@ Generate a starter D1 seed file with:
 npm run seed:generate
 ```
 
-That writes `seeds/dev_seed.sql` with a demo tenant, page, links, privacy UI, integrations, and a paused experiment.
-Replace the placeholder password hash and analytics IDs before running it against D1.
+That writes `seeds/dev_seed.sql` with safe default content, disabled third-party integrations, and a paused experiment.
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD_HASH` before generation if you need the generated seed to create an active admin user.
 
 
 ## Smoke test

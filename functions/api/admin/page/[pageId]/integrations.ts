@@ -1,5 +1,5 @@
 import { errorJson, json, readJson } from '../../../_utils';
-import { parseSessionCookie } from '../../../../../src/server/auth/session';
+import { validateAdminSession } from '../../../../../src/server/auth/session';
 import { makeId } from '../../../../../src/server/db/ids';
 
 const PROVIDERS = ['ga4', 'meta', 'gtm', 'cfwa'] as const;
@@ -11,7 +11,37 @@ interface IntegrationInput {
 }
 
 function normalizeProviderConfig(provider: Provider, input: Record<string, unknown> | undefined, env: Env): Record<string, unknown> {
-  const config = { ...(input || {}) };
+  const source = input || {};
+  const config: Record<string, unknown> = {};
+
+  if (provider === 'ga4' && typeof source.measurementId === 'string' && /^G-[A-Z0-9]{6,20}$/.test(source.measurementId.trim())) {
+    config.measurementId = source.measurementId.trim();
+  }
+  if (provider === 'ga4') {
+    config.trackPageViews = source.trackPageViews !== false;
+    config.trackClickEvents = source.trackClickEvents !== false;
+    config.includeExperimentParams = source.includeExperimentParams !== false;
+  }
+
+  if (provider === 'meta' && typeof source.pixelId === 'string' && /^\d{6,32}$/.test(source.pixelId.trim())) {
+    config.pixelId = source.pixelId.trim();
+  }
+  if (provider === 'meta' && source.eventMappings && typeof source.eventMappings === 'object' && !Array.isArray(source.eventMappings)) {
+    const eventMappings: Record<string, string> = {};
+    for (const [eventName, mappedName] of Object.entries(source.eventMappings as Record<string, unknown>)) {
+      if (/^[a-z0-9_]{1,40}$/.test(eventName) && typeof mappedName === 'string' && /^[A-Za-z0-9_]{1,60}$/.test(mappedName.trim())) {
+        eventMappings[eventName] = mappedName.trim();
+      }
+    }
+    config.eventMappings = eventMappings;
+  }
+
+  if (provider === 'gtm' && typeof source.containerId === 'string' && /^GTM-[A-Z0-9]{4,16}$/.test(source.containerId.trim())) {
+    config.containerId = source.containerId.trim();
+  }
+  if (provider === 'gtm') config.advertisingEnabled = Boolean(source.advertisingEnabled);
+  if (provider === 'cfwa') config.overlayOnly = source.overlayOnly !== false;
+
   if (provider === 'ga4' && !config.measurementId && env.GA4_MEASUREMENT_ID) config.measurementId = env.GA4_MEASUREMENT_ID;
   if (provider === 'meta' && !config.pixelId && env.META_PIXEL_ID) config.pixelId = env.META_PIXEL_ID;
   if (provider === 'gtm' && !config.containerId && env.GTM_CONTAINER_ID) config.containerId = env.GTM_CONTAINER_ID;
@@ -20,7 +50,11 @@ function normalizeProviderConfig(provider: Provider, input: Record<string, unkno
 }
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   if (!session) return errorJson('Unauthorized.', 401);
 
   const pageId = context.params.pageId as string;
@@ -56,7 +90,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 };
 
 export const onRequestPut: PagesFunction<Env> = async (context) => {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   if (!session) return errorJson('Unauthorized.', 401);
 
   const pageId = context.params.pageId as string;

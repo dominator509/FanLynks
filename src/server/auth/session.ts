@@ -2,6 +2,7 @@ export interface AdminSession {
   userId: string;
   tenantId: string;
   email: string;
+  sessionVersion: number;
   issuedAt: string;
   expiresAt: string;
 }
@@ -83,9 +84,36 @@ export async function parseSessionCookie(request: Request, secret: string): Prom
   try {
     const payload = JSON.parse(decoder.decode(base64UrlDecode(encodedPayload))) as AdminSession;
     if (!payload.userId || !payload.tenantId || !payload.email || !payload.expiresAt) return null;
+    if (!Number.isInteger(payload.sessionVersion) || payload.sessionVersion < 1) return null;
     if (new Date(payload.expiresAt).getTime() <= Date.now()) return null;
     return payload;
   } catch {
     return null;
   }
+}
+
+export async function validateAdminSession(args: {
+  request: Request;
+  secret: string;
+  db: D1Database;
+}): Promise<AdminSession | null> {
+  const session = await parseSessionCookie(args.request, args.secret);
+  if (!session) return null;
+
+  const row = await args.db.prepare(`
+    SELECT u.id, u.email, u.session_version, u.is_active, t.id AS tenant_id
+    FROM users u
+    JOIN tenants t ON t.owner_user_id = u.id
+    WHERE u.id = ?
+    LIMIT 1
+  `)
+    .bind(session.userId)
+    .first<{ id: string; email: string; session_version: number; is_active: number; tenant_id: string }>();
+
+  if (!row || !row.is_active) return null;
+  if (row.tenant_id !== session.tenantId) return null;
+  if (row.email.toLowerCase() !== session.email.toLowerCase()) return null;
+  if (Number(row.session_version) !== session.sessionVersion) return null;
+
+  return session;
 }

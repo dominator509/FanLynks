@@ -1,11 +1,15 @@
 import { errorJson, json } from '../../../_utils';
 import { publishedPageKey, variantManifestKey } from '../../../../../src/server/cache/keys';
-import { parseSessionCookie } from '../../../../../src/server/auth/session';
+import { validateAdminSession } from '../../../../../src/server/auth/session';
 import { buildPublishedPagePayloadById } from '../../../../../src/server/page/payload';
 import { makeId } from '../../../../../src/server/db/ids';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   if (!session) return errorJson('Unauthorized.', 401);
 
   const pageId = context.params.pageId as string;

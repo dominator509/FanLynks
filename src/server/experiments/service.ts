@@ -1,4 +1,9 @@
 import { makeId } from '../db/ids';
+import {
+  normalizeOptionalPublicUrl,
+  normalizeOptionalText,
+  sanitizeThemeTokens
+} from '../security/validation';
 
 export type ExperimentStatus = 'draft' | 'live' | 'paused' | 'winner' | 'archived';
 
@@ -113,9 +118,9 @@ function validateVariants(variants: VariantInput[] | undefined): VariantInput[] 
       id: variant.id,
       name,
       weight: normalizeWeight(variant.weight, Math.max(1, Math.floor(100 / variants.length))),
-      tokens: variant.tokens && typeof variant.tokens === 'object' ? variant.tokens : defaultTokens(index),
+      tokens: sanitizeThemeTokens(variant.tokens && typeof variant.tokens === 'object' ? variant.tokens : defaultTokens(index)),
       contentOverrides:
-        variant.contentOverrides && typeof variant.contentOverrides === 'object' ? variant.contentOverrides : null,
+        sanitizeContentOverrides(variant.contentOverrides),
       isEnabled: variant.isEnabled ?? true
     };
   });
@@ -124,6 +129,61 @@ function validateVariants(variants: VariantInput[] | undefined): VariantInput[] 
   if (enabledCount === 0) throw new Error('At least one enabled variant is required.');
 
   return normalized;
+}
+
+function sanitizeContentOverrides(input: unknown): Record<string, unknown> | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
+  const source = input as Record<string, unknown>;
+  const output: Record<string, unknown> = {};
+
+  if (source.page && typeof source.page === 'object' && !Array.isArray(source.page)) {
+    const page = source.page as Record<string, unknown>;
+    const sanitizedPage: Record<string, unknown> = {};
+    const title = normalizeOptionalText(page.title, 120);
+    const subtitle = normalizeOptionalText(page.subtitle, 240);
+    const announcementText = normalizeOptionalText(page.announcementText, 120);
+    const heroCtaLabel = normalizeOptionalText(page.heroCtaLabel, 60);
+    const avatarUrl = normalizeOptionalPublicUrl(page.avatarUrl);
+    const announcementUrl = normalizeOptionalPublicUrl(page.announcementUrl);
+    const heroCtaUrl = normalizeOptionalPublicUrl(page.heroCtaUrl);
+
+    if (title) sanitizedPage.title = title;
+    if (subtitle) sanitizedPage.subtitle = subtitle;
+    if (announcementText) sanitizedPage.announcementText = announcementText;
+    if (heroCtaLabel) sanitizedPage.heroCtaLabel = heroCtaLabel;
+    if (avatarUrl) sanitizedPage.avatarUrl = avatarUrl;
+    if (announcementUrl) sanitizedPage.announcementUrl = announcementUrl;
+    if (heroCtaUrl) sanitizedPage.heroCtaUrl = heroCtaUrl;
+    if (Object.keys(sanitizedPage).length) output.page = sanitizedPage;
+  }
+
+  if (source.links && typeof source.links === 'object' && !Array.isArray(source.links)) {
+    const links: Record<string, unknown> = {};
+    for (const [linkId, rawLink] of Object.entries(source.links as Record<string, unknown>)) {
+      if (!/^[a-zA-Z0-9_-]{1,120}$/.test(linkId) || !rawLink || typeof rawLink !== 'object' || Array.isArray(rawLink)) continue;
+      const link = rawLink as Record<string, unknown>;
+      const sanitizedLink: Record<string, unknown> = {};
+      const title = normalizeOptionalText(link.title, 120);
+      const subtitle = normalizeOptionalText(link.subtitle, 180);
+      const badgeText = normalizeOptionalText(link.badgeText, 48);
+      const url = normalizeOptionalPublicUrl(link.url);
+      if (title) sanitizedLink.title = title;
+      if (subtitle) sanitizedLink.subtitle = subtitle;
+      if (badgeText) sanitizedLink.badgeText = badgeText;
+      if (url) sanitizedLink.url = url;
+      if (Object.keys(sanitizedLink).length) links[linkId] = sanitizedLink;
+    }
+    if (Object.keys(links).length) output.links = links;
+  }
+
+  if (Array.isArray(source.linkOrder)) {
+    const linkOrder = source.linkOrder
+      .filter((value): value is string => typeof value === 'string' && /^[a-zA-Z0-9_-]{1,120}$/.test(value))
+      .slice(0, 100);
+    if (linkOrder.length) output.linkOrder = linkOrder;
+  }
+
+  return Object.keys(output).length ? output : null;
 }
 
 export async function listExperiments(db: D1Database, pageId: string): Promise<ExperimentWithVariants[]> {

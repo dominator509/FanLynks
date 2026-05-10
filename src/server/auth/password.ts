@@ -1,15 +1,5 @@
 const encoder = new TextEncoder();
 
-function hexToBytes(hex: string): Uint8Array {
-  const normalized = hex.trim().toLowerCase();
-  if (normalized.length % 2 !== 0) throw new Error('Invalid hex length');
-  const bytes = new Uint8Array(normalized.length / 2);
-  for (let i = 0; i < normalized.length; i += 2) {
-    bytes[i / 2] = parseInt(normalized.slice(i, i + 2), 16);
-  }
-  return bytes;
-}
-
 function base64ToBytes(value: string): Uint8Array {
   const bin = atob(value);
   return Uint8Array.from(bin, (char) => char.charCodeAt(0));
@@ -22,11 +12,6 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
     result |= a[i] ^ b[i];
   }
   return result === 0;
-}
-
-async function sha256(input: string): Promise<Uint8Array> {
-  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(input));
-  return new Uint8Array(digest);
 }
 
 async function verifyPbkdf2Sha256(password: string, iterations: number, salt: string, expectedBase64: string): Promise<boolean> {
@@ -58,13 +43,12 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   const parts = storedHash.split('$');
   if (parts[0] === 'pbkdf2_sha256' && parts.length === 4) {
     const iterations = Number(parts[1]);
-    if (!Number.isFinite(iterations) || iterations <= 0) return false;
-    return verifyPbkdf2Sha256(password, iterations, parts[2], parts[3]);
-  }
-
-  if (parts[0] === 'sha256' && parts.length === 2) {
-    const digest = await sha256(password);
-    return constantTimeEqual(digest, hexToBytes(parts[1]));
+    if (!Number.isInteger(iterations) || iterations < 100000 || iterations > 100000) return false;
+    try {
+      return await verifyPbkdf2Sha256(password, iterations, parts[2], parts[3]);
+    } catch {
+      return false;
+    }
   }
 
   return false;

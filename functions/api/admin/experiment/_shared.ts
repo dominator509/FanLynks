@@ -1,5 +1,5 @@
 import { errorJson } from '../../_utils';
-import { parseSessionCookie } from '../../../../src/server/auth/session';
+import { validateAdminSession } from '../../../../src/server/auth/session';
 
 export async function requireExperimentAccess(context: EventContext<Env, string, unknown>): Promise<{
   experimentId: string;
@@ -7,7 +7,11 @@ export async function requireExperimentAccess(context: EventContext<Env, string,
   tenantId: string;
   userId: string;
 } | Response> {
-  const session = await parseSessionCookie(context.request, context.env.SESSION_SECRET);
+  const session = await validateAdminSession({
+    request: context.request,
+    secret: context.env.SESSION_SECRET,
+    db: context.env.DB
+  });
   if (!session) return errorJson('Unauthorized.', 401);
 
   const experimentId = context.params.experimentId as string;

@@ -1,5 +1,6 @@
 import type { PublishedIntegration, PublishedLink, PublishedPagePayload, PublishedSection, PublishedVariant } from '../../shared/types/page';
 import { makeId } from '../db/ids';
+import { normalizeOptionalPublicUrl, normalizeOptionalText, sanitizePrivacyUi, sanitizeThemeTokens } from '../security/validation';
 
 interface PageRow {
   id: string;
@@ -174,8 +175,8 @@ async function buildPublishedPagePayload(db: D1Database, page: PageRow, nowIso: 
       variantId: variant.id,
       variantName: variant.name,
       weight: variant.weight,
-      tokens: safeParseJson(variant.tokens_json),
-      contentOverrides: variant.content_overrides_json ? safeParseJson(variant.content_overrides_json) : null
+      tokens: sanitizeThemeTokens(safeParseJson(variant.tokens_json)),
+      contentOverrides: variant.content_overrides_json ? sanitizeContentOverrides(safeParseJson(variant.content_overrides_json)) : null
     }));
   }
 
@@ -190,18 +191,18 @@ async function buildPublishedPagePayload(db: D1Database, page: PageRow, nowIso: 
     sectionId: row.section_id,
     title: row.title,
     subtitle: row.subtitle,
-    url: row.url,
+    url: normalizeOptionalPublicUrl(row.url) ?? '',
     iconType: row.icon_type,
-    iconValue: row.icon_value,
+    iconValue: row.icon_type === 'image' ? normalizeOptionalPublicUrl(row.icon_value) : row.icon_value,
     badgeText: row.badge_text,
     styleRole: row.style_role,
     rowOrder: row.row_order
-  }));
+  })).filter((link) => link.url);
 
   const integrations: PublishedIntegration[] = (integrationsRes.results ?? []).map((row) => ({
     provider: row.provider,
     isEnabled: Boolean(row.is_enabled),
-    config: safeParseJson(row.config_json)
+    config: sanitizeIntegrationConfig(row.provider, safeParseJson(row.config_json))
   }));
 
   return {
@@ -214,17 +215,17 @@ async function buildPublishedPagePayload(db: D1Database, page: PageRow, nowIso: 
         slug: page.slug,
         title: page.title,
         subtitle: page.subtitle,
-        avatarUrl: page.avatar_url,
+        avatarUrl: normalizeOptionalPublicUrl(page.avatar_url),
         announcementEnabled: Boolean(page.announcement_enabled),
         announcementText: page.announcement_text,
-        announcementUrl: page.announcement_url,
+        announcementUrl: normalizeOptionalPublicUrl(page.announcement_url),
         heroCtaLabel: page.hero_cta_label,
-        heroCtaUrl: page.hero_cta_url,
+        heroCtaUrl: normalizeOptionalPublicUrl(page.hero_cta_url),
         trackingMode: page.tracking_mode,
         privacyMode: page.privacy_mode,
         publishedVersion: page.published_version,
-        themeTokens: safeParseJson(page.page_theme_json),
-        privacyUi: safeParseJson(page.page_privacy_json)
+        themeTokens: sanitizeThemeTokens(safeParseJson(page.page_theme_json)),
+        privacyUi: sanitizePrivacyUi(safeParseJson(page.page_privacy_json))
       },
       sections,
       links,
@@ -298,4 +299,93 @@ function safeParseJson(value: string | null): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+function sanitizeContentOverrides(input: Record<string, unknown>): Record<string, unknown> | null {
+  const output: Record<string, unknown> = {};
+
+  if (input.page && typeof input.page === 'object' && !Array.isArray(input.page)) {
+    const page = input.page as Record<string, unknown>;
+    const sanitizedPage: Record<string, unknown> = {};
+    const title = normalizeOptionalText(page.title, 120);
+    const subtitle = normalizeOptionalText(page.subtitle, 240);
+    const avatarUrl = normalizeOptionalPublicUrl(page.avatarUrl);
+    const announcementText = normalizeOptionalText(page.announcementText, 120);
+    const announcementUrl = normalizeOptionalPublicUrl(page.announcementUrl);
+    const heroCtaLabel = normalizeOptionalText(page.heroCtaLabel, 60);
+    const heroCtaUrl = normalizeOptionalPublicUrl(page.heroCtaUrl);
+
+    if (title) sanitizedPage.title = title;
+    if (subtitle) sanitizedPage.subtitle = subtitle;
+    if (avatarUrl) sanitizedPage.avatarUrl = avatarUrl;
+    if (announcementText) sanitizedPage.announcementText = announcementText;
+    if (announcementUrl) sanitizedPage.announcementUrl = announcementUrl;
+    if (heroCtaLabel) sanitizedPage.heroCtaLabel = heroCtaLabel;
+    if (heroCtaUrl) sanitizedPage.heroCtaUrl = heroCtaUrl;
+    if (Object.keys(sanitizedPage).length) output.page = sanitizedPage;
+  }
+
+  if (input.links && typeof input.links === 'object' && !Array.isArray(input.links)) {
+    const links: Record<string, unknown> = {};
+    for (const [linkId, rawLink] of Object.entries(input.links as Record<string, unknown>)) {
+      if (!/^[a-zA-Z0-9_-]{1,120}$/.test(linkId) || !rawLink || typeof rawLink !== 'object' || Array.isArray(rawLink)) continue;
+      const link = rawLink as Record<string, unknown>;
+      const sanitizedLink: Record<string, unknown> = {};
+      const title = normalizeOptionalText(link.title, 120);
+      const subtitle = normalizeOptionalText(link.subtitle, 180);
+      const url = normalizeOptionalPublicUrl(link.url);
+      const badgeText = normalizeOptionalText(link.badgeText, 48);
+      if (title) sanitizedLink.title = title;
+      if (subtitle) sanitizedLink.subtitle = subtitle;
+      if (url) sanitizedLink.url = url;
+      if (badgeText) sanitizedLink.badgeText = badgeText;
+      if (Object.keys(sanitizedLink).length) links[linkId] = sanitizedLink;
+    }
+    if (Object.keys(links).length) output.links = links;
+  }
+
+  if (Array.isArray(input.linkOrder)) {
+    const linkOrder = input.linkOrder.filter((value): value is string => typeof value === 'string' && /^[a-zA-Z0-9_-]{1,120}$/.test(value)).slice(0, 100);
+    if (linkOrder.length) output.linkOrder = linkOrder;
+  }
+
+  return Object.keys(output).length ? output : null;
+}
+
+function sanitizeIntegrationConfig(provider: IntegrationRow['provider'], input: Record<string, unknown>): Record<string, unknown> {
+  const output: Record<string, unknown> = {};
+
+  if (provider === 'ga4') {
+    if (typeof input.measurementId === 'string' && /^G-[A-Z0-9]{6,20}$/.test(input.measurementId.trim())) {
+      output.measurementId = input.measurementId.trim();
+    }
+    output.trackPageViews = input.trackPageViews !== false;
+    output.trackClickEvents = input.trackClickEvents !== false;
+    output.includeExperimentParams = input.includeExperimentParams !== false;
+  }
+
+  if (provider === 'meta') {
+    if (typeof input.pixelId === 'string' && /^\d{6,32}$/.test(input.pixelId.trim())) output.pixelId = input.pixelId.trim();
+    if (input.eventMappings && typeof input.eventMappings === 'object' && !Array.isArray(input.eventMappings)) {
+      const eventMappings: Record<string, string> = {};
+      for (const [eventName, mappedName] of Object.entries(input.eventMappings as Record<string, unknown>)) {
+        if (/^[a-z0-9_]{1,40}$/.test(eventName) && typeof mappedName === 'string' && /^[A-Za-z0-9_]{1,60}$/.test(mappedName.trim())) {
+          eventMappings[eventName] = mappedName.trim();
+        }
+      }
+      output.eventMappings = eventMappings;
+    }
+  }
+
+  if (provider === 'gtm') {
+    if (typeof input.containerId === 'string' && /^GTM-[A-Z0-9]{4,16}$/.test(input.containerId.trim())) output.containerId = input.containerId.trim();
+    output.advertisingEnabled = Boolean(input.advertisingEnabled);
+  }
+
+  if (provider === 'cfwa') {
+    output.enabled = input.enabled !== false;
+    output.overlayOnly = input.overlayOnly !== false;
+  }
+
+  return output;
 }

@@ -1,5 +1,6 @@
 import type { CoreEventName, CoreEventPayload, EventIngestRequest } from '../../shared/types/events';
 import { makeId } from '../db/ids';
+import { normalizeOptionalPublicUrl } from '../security/validation';
 
 interface PageLookupRow {
   id: string;
@@ -20,10 +21,7 @@ const ALLOWED_EVENT_NAMES = new Set<CoreEventName>([
   'hero_cta_click',
   'link_click',
   'social_click',
-  'consent_updated',
-  'experiment_assigned',
-  'admin_login_success',
-  'admin_publish'
+  'experiment_assigned'
 ]);
 
 export interface CollectEventInput {
@@ -52,8 +50,8 @@ export async function collectAndPersistEvent(args: CollectEventInput): Promise<S
   if (!page) throw new Error('Page not found.');
 
   const link = body.link_id ? await lookupLink(args.db, page.id, body.link_id) : null;
-  const destinationUrl = normalizeUrl(body.destination_url ?? link?.url ?? null);
-  const destinationDomain = body.destination_domain?.trim() || getDomain(destinationUrl);
+  const destinationUrl = normalizeOptionalPublicUrl(body.destination_url) ?? normalizeOptionalPublicUrl(link?.url) ?? null;
+  const destinationDomain = normalizeDomain(body.destination_domain) || getDomain(destinationUrl);
   const occurredAt = normalizeOccurredAt(body.occurred_at);
   const userAgent = args.request.headers.get('user-agent') ?? '';
 
@@ -69,7 +67,7 @@ export async function collectAndPersistEvent(args: CollectEventInput): Promise<S
     row_index: normalizeInteger(body.row_index) ?? link?.row_order ?? null,
     destination_url: destinationUrl,
     destination_domain: destinationDomain,
-    referrer: body.referrer?.trim() || args.request.headers.get('referer') || null,
+    referrer: normalizeReferrer(body.referrer) || normalizeReferrer(args.request.headers.get('referer')) || null,
     utm_source: normalizeNullableString(body.utm_source),
     utm_medium: normalizeNullableString(body.utm_medium),
     utm_campaign: normalizeNullableString(body.utm_campaign),
@@ -164,7 +162,7 @@ function normalizeEventName(input?: string): CoreEventName | null {
 function normalizeNullableString(input?: string | null): string | null {
   if (typeof input !== 'string') return null;
   const value = input.trim();
-  return value ? value : null;
+  return value && value.length <= 160 ? value : null;
 }
 
 function normalizeInteger(input?: number | null): number | null {
@@ -172,19 +170,14 @@ function normalizeInteger(input?: number | null): number | null {
   return Math.trunc(input);
 }
 
-function normalizeUrl(input: string | null): string | null {
-  if (!input) return null;
-  try {
-    return new URL(input).toString();
-  } catch {
-    return null;
-  }
-}
-
 function normalizeOccurredAt(input?: string | null): string {
   if (!input) return new Date().toISOString();
   const date = new Date(input);
-  return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  if (Number.isNaN(date.getTime())) return new Date().toISOString();
+  const now = Date.now();
+  const time = date.getTime();
+  if (time < now - 24 * 60 * 60 * 1000 || time > now + 5 * 60 * 1000) return new Date().toISOString();
+  return date.toISOString();
 }
 
 function getDomain(url: string | null): string | null {
@@ -194,6 +187,16 @@ function getDomain(url: string | null): string | null {
   } catch {
     return null;
   }
+}
+
+function normalizeDomain(input?: string | null): string | null {
+  if (typeof input !== 'string') return null;
+  const value = input.trim().toLowerCase();
+  return /^[a-z0-9.-]{1,253}$/.test(value) ? value : null;
+}
+
+function normalizeReferrer(input?: string | null): string | null {
+  return normalizeOptionalPublicUrl(input);
 }
 
 function detectDeviceType(userAgent: string): string {
