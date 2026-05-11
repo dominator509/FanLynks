@@ -3,29 +3,43 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0c0d10" />
-    <title>Custom Link Hub</title>
-    <style>
-      :root {
-        --bg: #0d0f14;
-        --bg-accent: radial-gradient(circle at top, rgba(255,255,255,0.06), transparent 30%);
-        --surface: rgba(255,255,255,0.06);
-        --surface-2: rgba(255,255,255,0.08);
-        --text: #f7f7fb;
-        --muted: #a9b0bf;
-        --accent: #8b5cf6;
-        --primary-bg: #ffffff;
-        --primary-text: #12141a;
-        --secondary-bg: rgba(255,255,255,0.08);
-        --secondary-text: #f7f7fb;
-        --neutral-bg: rgba(255,255,255,0.03);
-        --neutral-text: #edf1f7;
-        --border: rgba(255,255,255,0.12);
-        --icon-bg: rgba(255,255,255,0.08);
+    <meta name="theme-color" content="#050505" />
+  <title>Fan Lynks</title>
+  <style>
+    @font-face {
+      font-family: "Montserrat";
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url("/assets/fonts/montserrat-semibold.ttf") format("truetype");
+    }
+    @font-face {
+      font-family: "Montserrat";
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url("/assets/fonts/montserrat-bold.ttf") format("truetype");
+    }
+    :root {
+        --bg: #050505;
+        --bg-accent: radial-gradient(circle at top, rgba(207,160,41,0.16), transparent 34%);
+        --surface: #121212;
+        --surface-2: #1a1a1a;
+        --text: #ffffff;
+        --muted: #c8c2b5;
+        --accent: #cfa029;
+        --primary-bg: #cfa029;
+        --primary-text: #050505;
+        --secondary-bg: #171717;
+        --secondary-text: #ffffff;
+        --neutral-bg: #101010;
+        --neutral-text: #f5f0e8;
+        --border: #302819;
+        --icon-bg: #ffffff;
         --shadow: 0 24px 64px rgba(0,0,0,0.28);
         --radius: 22px;
         --button-radius: 18px;
-        --font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-body: Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         --font-heading: var(--font-body);
         --max-width: 720px;
         --gap: 14px;
@@ -37,6 +51,7 @@
         font-family: var(--font-body);
         background: var(--bg-accent), var(--bg);
         color: var(--text);
+        font-weight: 600;
       }
 
       .app {
@@ -94,7 +109,7 @@
       .eyebrow {
         color: var(--accent);
         font-size: 0.8rem;
-        letter-spacing: 0.12em;
+        letter-spacing: 0;
         text-transform: uppercase;
         font-weight: 700;
         margin-bottom: 6px;
@@ -104,7 +119,8 @@
         font-family: var(--font-heading);
         font-size: clamp(1.9rem, 5vw, 2.7rem);
         line-height: 1.05;
-        letter-spacing: -0.03em;
+        letter-spacing: 0;
+        font-weight: 700;
       }
       .subtitle {
         margin: 10px 0 0;
@@ -120,6 +136,7 @@
         text-decoration: none;
         font-weight: 800;
         font-size: 1rem;
+        letter-spacing: 0;
         padding: 15px 18px;
         border-radius: var(--button-radius);
         background: var(--primary-bg);
@@ -129,7 +146,7 @@
 
       .section-label {
         font-size: 0.82rem;
-        letter-spacing: 0.12em;
+        letter-spacing: 0;
         text-transform: uppercase;
         color: var(--muted);
         margin: 18px 4px 10px;
@@ -207,6 +224,7 @@
       .title {
         font-weight: 800;
         font-size: 1rem;
+        letter-spacing: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -352,7 +370,7 @@
           <div class="hero-top">
             <img id="avatar" class="avatar" alt="" />
             <div>
-              <div class="eyebrow">Custom Link Hub</div>
+              <div class="eyebrow">Fan Lynks</div>
               <h1 id="title">Loading...</h1>
             </div>
           </div>

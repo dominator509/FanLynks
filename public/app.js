@@ -21,25 +21,25 @@
   };
 
   const DEFAULT_TOKENS = {
-    bg: '#0d0f14',
-    bgAccent: 'radial-gradient(circle at top, rgba(255,255,255,0.06), transparent 30%)',
-    surface: 'rgba(255,255,255,0.06)',
-    text: '#f7f7fb',
-    muted: '#a9b0bf',
-    accent: '#8b5cf6',
-    primaryBg: '#ffffff',
-    primaryText: '#12141a',
-    secondaryBg: 'rgba(255,255,255,0.08)',
-    secondaryText: '#f7f7fb',
-    neutralBg: 'rgba(255,255,255,0.03)',
-    neutralText: '#edf1f7',
-    border: 'rgba(255,255,255,0.12)',
-    iconBg: 'rgba(255,255,255,0.08)',
+    bg: '#050505',
+    bgAccent: 'radial-gradient(circle at top, rgba(207,160,41,0.16), transparent 34%)',
+    surface: '#121212',
+    text: '#ffffff',
+    muted: '#c8c2b5',
+    accent: '#cfa029',
+    primaryBg: '#cfa029',
+    primaryText: '#050505',
+    secondaryBg: '#171717',
+    secondaryText: '#ffffff',
+    neutralBg: '#101010',
+    neutralText: '#f5f0e8',
+    border: '#302819',
+    iconBg: '#ffffff',
     shadow: '0 24px 64px rgba(0,0,0,0.28)',
     radius: '22px',
     buttonRadius: '18px',
-    fontBody: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    fontHeading: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontBody: 'Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontHeading: 'Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     maxWidth: '720px',
     gap: '14px'
   };
@@ -124,7 +124,7 @@
   function applyPrivacyUi() {
     const ui = privacyUi();
     dom.privacyChoices.textContent = ui.privacyChoicesLabel || 'Your Privacy Choices';
-    dom.footerNote.textContent = ui.footerNote || 'Fast, privacy-aware link hub';
+    dom.footerNote.textContent = ui.footerNote || 'Fan Lynks keeps creator funnels clean, fast, and privacy-aware.';
     updatePrivacyStatus();
   }
 
@@ -251,7 +251,7 @@
   }
 
   function renderPage() {
-    document.title = state.page.title || 'Custom Link Hub';
+    document.title = state.page.title || 'Fan Lynks';
     dom.title.textContent = state.page.title || 'Untitled page';
     dom.subtitle.textContent = state.page.subtitle || '';
     dom.subtitle.hidden = !state.page.subtitle;

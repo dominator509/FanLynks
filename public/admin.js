@@ -1,33 +1,40 @@
 const $ = (id) => document.getElementById(id);
 
+const DEFAULT_PRESET = 'fanlynks_dark';
+const FANLYNKS_FONT = 'Montserrat, ui-sans-serif, system-ui, sans-serif';
+
 const PRESETS = {
-  midnight_luxe: {
-    bg: '#09090b', surface: '#18181b', text: '#fafafa', muted: '#b2b2ba', accent: '#d4af37', border: '#34343a', iconBg: '#232329',
-    primaryBg: '#ffffff', primaryText: '#12141a', secondaryBg: '#1c1f28', secondaryText: '#f7f7fb', neutralBg: '#141820', neutralText: '#eef2fb',
-    fontBody: 'Inter, system-ui, sans-serif', fontHeading: 'Cormorant Garamond, Georgia, serif', gap: '14px'
+  fanlynks_dark: {
+    bg: '#050505', surface: '#121212', text: '#ffffff', muted: '#c8c2b5', accent: '#cfa029', border: '#302819', iconBg: '#ffffff',
+    primaryBg: '#cfa029', primaryText: '#050505', secondaryBg: '#171717', secondaryText: '#ffffff', neutralBg: '#101010', neutralText: '#f5f0e8',
+    fontBody: FANLYNKS_FONT, fontHeading: FANLYNKS_FONT, gap: '14px'
   },
-  pink_neon: {
-    bg: '#140917', surface: '#2c1233', text: '#fff7fb', muted: '#f1d5ea', accent: '#ff4fd8', border: '#5f2d67', iconBg: '#3d1847',
-    primaryBg: '#ff4fd8', primaryText: '#22061b', secondaryBg: '#3d1847', secondaryText: '#fff7fb', neutralBg: '#27112f', neutralText: '#fff7fb',
-    fontBody: 'Nunito, system-ui, sans-serif', fontHeading: 'Poppins, system-ui, sans-serif', gap: '14px'
+  fanlynks_light: {
+    bg: '#ffffff', surface: '#f7f4ee', text: '#050505', muted: '#5b5549', accent: '#cfa029', border: '#ded3bd', iconBg: '#050505',
+    primaryBg: '#050505', primaryText: '#ffffff', secondaryBg: '#f0e6d0', secondaryText: '#050505', neutralBg: '#ffffff', neutralText: '#050505',
+    fontBody: FANLYNKS_FONT, fontHeading: FANLYNKS_FONT, gap: '14px'
+  },
+  fanlynks_gold: {
+    bg: '#100d06', surface: '#191307', text: '#fff8e8', muted: '#d9c99c', accent: '#d9aa2d', border: '#3b2a0b', iconBg: '#fff8e8',
+    primaryBg: '#d9aa2d', primaryText: '#050505', secondaryBg: '#231908', secondaryText: '#fff8e8', neutralBg: '#151008', neutralText: '#fff8e8',
+    fontBody: FANLYNKS_FONT, fontHeading: FANLYNKS_FONT, gap: '14px'
   },
   clean_ice: {
     bg: '#f8fafc', surface: '#ffffff', text: '#0f172a', muted: '#64748b', accent: '#2563eb', border: '#dbe3ef', iconBg: '#eef4ff',
     primaryBg: '#2563eb', primaryText: '#ffffff', secondaryBg: '#eff6ff', secondaryText: '#0f172a', neutralBg: '#f8fafc', neutralText: '#0f172a',
-    fontBody: 'Inter, system-ui, sans-serif', fontHeading: 'Inter, system-ui, sans-serif', gap: '14px'
+    fontBody: FANLYNKS_FONT, fontHeading: FANLYNKS_FONT, gap: '14px'
   },
   forest_gold: {
     bg: '#0b1913', surface: '#12241c', text: '#f4f1e8', muted: '#c4c0b5', accent: '#d6b25e', border: '#254235', iconBg: '#1a3127',
     primaryBg: '#d6b25e', primaryText: '#1b1710', secondaryBg: '#173126', secondaryText: '#f4f1e8', neutralBg: '#13261d', neutralText: '#edf3ea',
-    fontBody: 'Inter, system-ui, sans-serif', fontHeading: 'Playfair Display, Georgia, serif', gap: '14px'
+    fontBody: FANLYNKS_FONT, fontHeading: FANLYNKS_FONT, gap: '14px'
   }
 };
 
 const EXP_PRESETS = [
-  { theme_name: 'midnight_luxe', page_bg: '#09090b', surface_bg: '#18181b', text_color: '#fafafa', accent_color: '#d4af37', font_preset: 'elegant_serif', button_style: 'glossy_dark' },
-  { theme_name: 'pink_neon', page_bg: '#140917', surface_bg: '#2c1233', text_color: '#fff7fb', accent_color: '#ff4fd8', font_preset: 'cute_rounded', button_style: 'soft_neon' },
-  { theme_name: 'ice_clean', page_bg: '#f8fafc', surface_bg: '#ffffff', text_color: '#0f172a', accent_color: '#2563eb', font_preset: 'clean_sans', button_style: 'minimal_fill' },
-  { theme_name: 'forest_gold', page_bg: '#0b1913', surface_bg: '#12241c', text_color: '#f4f1e8', accent_color: '#d6b25e', font_preset: 'luxury_sans', button_style: 'dark_outline' }
+  { theme_name: 'fanlynks_dark', page_bg: '#050505', surface_bg: '#121212', text_color: '#ffffff', accent_color: '#cfa029', font_preset: 'fanlynks_montserrat', button_style: 'gold_fill' },
+  { theme_name: 'fanlynks_light', page_bg: '#ffffff', surface_bg: '#f7f4ee', text_color: '#050505', accent_color: '#cfa029', font_preset: 'fanlynks_montserrat', button_style: 'black_fill' },
+  { theme_name: 'fanlynks_gold', page_bg: '#100d06', surface_bg: '#191307', text_color: '#fff8e8', accent_color: '#d9aa2d', font_preset: 'fanlynks_montserrat', button_style: 'premium_gold' }
 ];
 
 const els = {
@@ -403,29 +410,30 @@ function themeFromForm() {
     secondaryText: els.themeSecondaryText.value,
     neutralBg: els.themeNeutralBg.value,
     neutralText: els.themeNeutralText.value,
-    fontBody: els.themeFontBody.value.trim() || PRESETS.midnight_luxe.fontBody,
-    fontHeading: els.themeFontHeading.value.trim() || PRESETS.midnight_luxe.fontHeading,
+    fontBody: els.themeFontBody.value.trim() || PRESETS[DEFAULT_PRESET].fontBody,
+    fontHeading: els.themeFontHeading.value.trim() || PRESETS[DEFAULT_PRESET].fontHeading,
     gap: els.themeGap.value.trim() || '14px'
   };
 }
 
 function fillThemeForm(tokens) {
-  const t = { ...PRESETS.midnight_luxe, ...(tokens || {}) };
-  els.themeBg.value = normalizeColor(t.bg, '#09090b');
-  els.themeSurface.value = normalizeColor(t.surface, '#18181b');
-  els.themeText.value = normalizeColor(t.text, '#fafafa');
-  els.themeMuted.value = normalizeColor(t.muted, '#b2b2ba');
-  els.themeAccent.value = normalizeColor(t.accent, '#d4af37');
-  els.themeBorder.value = normalizeColor(t.border, '#34343a');
-  els.themeIconBg.value = normalizeColor(t.iconBg, '#232329');
-  els.themePrimaryBg.value = normalizeColor(t.primaryBg, '#ffffff');
-  els.themePrimaryText.value = normalizeColor(t.primaryText, '#12141a');
-  els.themeSecondaryBg.value = normalizeColor(t.secondaryBg, '#1c1f28');
-  els.themeSecondaryText.value = normalizeColor(t.secondaryText, '#f7f7fb');
-  els.themeNeutralBg.value = normalizeColor(t.neutralBg, '#141820');
-  els.themeNeutralText.value = normalizeColor(t.neutralText, '#eef2fb');
-  els.themeFontBody.value = t.fontBody || PRESETS.midnight_luxe.fontBody;
-  els.themeFontHeading.value = t.fontHeading || PRESETS.midnight_luxe.fontHeading;
+  const fallback = PRESETS[DEFAULT_PRESET];
+  const t = { ...fallback, ...(tokens || {}) };
+  els.themeBg.value = normalizeColor(t.bg, fallback.bg);
+  els.themeSurface.value = normalizeColor(t.surface, fallback.surface);
+  els.themeText.value = normalizeColor(t.text, fallback.text);
+  els.themeMuted.value = normalizeColor(t.muted, fallback.muted);
+  els.themeAccent.value = normalizeColor(t.accent, fallback.accent);
+  els.themeBorder.value = normalizeColor(t.border, fallback.border);
+  els.themeIconBg.value = normalizeColor(t.iconBg, fallback.iconBg);
+  els.themePrimaryBg.value = normalizeColor(t.primaryBg, fallback.primaryBg);
+  els.themePrimaryText.value = normalizeColor(t.primaryText, fallback.primaryText);
+  els.themeSecondaryBg.value = normalizeColor(t.secondaryBg, fallback.secondaryBg);
+  els.themeSecondaryText.value = normalizeColor(t.secondaryText, fallback.secondaryText);
+  els.themeNeutralBg.value = normalizeColor(t.neutralBg, fallback.neutralBg);
+  els.themeNeutralText.value = normalizeColor(t.neutralText, fallback.neutralText);
+  els.themeFontBody.value = t.fontBody || fallback.fontBody;
+  els.themeFontHeading.value = t.fontHeading || fallback.fontHeading;
   els.themeGap.value = t.gap || '14px';
   renderAppearancePreview();
 updatePublishMeta();
@@ -446,8 +454,8 @@ function renderAppearancePreview() {
   shell.style.setProperty('--pv-icon', theme.iconBg);
   shell.style.fontFamily = theme.fontBody;
   shell.innerHTML = `
-    <div style="font-family:${theme.fontHeading};font-size:24px;font-weight:700">${escapeHtml(els.pageTitle.value || 'Your Brand')}</div>
-    <div style="color:${theme.muted};margin-top:6px">${escapeHtml(els.pageSubtitle.value || 'Strong hierarchy, low friction, obvious buttons.')}</div>
+    <div style="font-family:${theme.fontHeading};font-size:24px;font-weight:700;letter-spacing:0">${escapeHtml(els.pageTitle.value || 'Fan Lynks')}</div>
+    <div style="color:${theme.muted};margin-top:6px">${escapeHtml(els.pageSubtitle.value || 'Cleaner funnels, smarter analytics, and more control.')}</div>
     <div class="preview-row preview-btn primary"><div class="preview-icon">★</div><div><div>Primary CTA</div><div style="opacity:.72;font-size:13px">Highest value action first</div></div></div>
     <div class="preview-row preview-btn secondary"><div class="preview-icon">◎</div><div><div>Secondary CTA</div><div style="opacity:.72;font-size:13px">Supportive offer or signup</div></div></div>
     <div class="preview-row preview-btn neutral"><div class="preview-icon">○</div><div><div>Neutral CTA</div><div style="opacity:.72;font-size:13px">Additional destination</div></div></div>
@@ -568,7 +576,7 @@ function hydratePageForm(payload) {
   els.announcementUrl.value = page.announcementUrl || '';
   els.trackingMode.value = page.trackingMode || 'none';
   els.privacyMode.value = page.privacyMode || 'default_standard';
-  fillThemeForm(page.themeTokens || PRESETS.midnight_luxe);
+  fillThemeForm(page.themeTokens || PRESETS[DEFAULT_PRESET]);
   fillPrivacyForm(payload.privacyUi || page.privacyUi || {});
   fillIntegrationsForm(payload.integrations || {});
   renderLinks();
@@ -1052,7 +1060,7 @@ function fillPresetOptions() {
 }
 
 function applyPreset() {
-  fillThemeForm(PRESETS[els.appearancePreset.value] || PRESETS.midnight_luxe);
+  fillThemeForm(PRESETS[els.appearancePreset.value] || PRESETS[DEFAULT_PRESET]);
 }
 
 function escapeHtml(value) {
