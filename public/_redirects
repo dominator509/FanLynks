@@ -1,3 +1,8 @@
 /api/* /api/:splat 200
 /assets/* /assets/:splat 200
+/join /join/index.html 200
+/demo /demo/index.html 200
+/analytics /analytics/index.html 200
+/creators /creators/index.html 200
+/contact /contact/index.html 200
 /* /index.html 200
