@@ -399,7 +399,7 @@
 
   function maybeShowPrivacyBanner() {
     const key = consentAckKey();
-    if (state.privacy.regionPolicy === 'uk_strict' && !localStorage.getItem(key)) {
+    if (state.privacy.regionPolicy === 'uk_strict' && !safeStorageGet(key)) {
       dom.privacyTitle.textContent = privacyUi().bannerTitle || 'Choose your privacy settings';
       dom.privacyBody.textContent = privacyUi().bannerBody || 'We use optional analytics and marketing tags only if you allow them. Essential features stay on either way.';
       dom.privacyAccept.textContent = privacyUi().acceptLabel || 'Allow all';
@@ -420,7 +420,7 @@
       dom.privacyAnalyticsOnly.hidden = true;
       dom.privacyDecline.hidden = true;
       dom.privacyClose.hidden = false;
-      if (!localStorage.getItem(key)) showPrivacyBanner();
+      if (!safeStorageGet(key)) showPrivacyBanner();
     }
   }
 
@@ -430,7 +430,21 @@
 
   function hidePrivacyBanner() {
     dom.privacyBanner.style.display = 'none';
-    try { localStorage.setItem(consentAckKey(), '1'); } catch {}
+    safeStorageSet(consentAckKey(), '1');
+  }
+
+  function safeStorageGet(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function safeStorageSet(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {}
   }
 
   async function updateConsent(analytics, advertising) {
