@@ -1,5 +1,4 @@
 import type { PublishedIntegration, PublishedLink, PublishedPagePayload, PublishedSection, PublishedVariant } from '../../shared/types/page';
-import { makeId } from '../db/ids';
 import { normalizeOptionalPublicUrl, normalizeOptionalText, sanitizePrivacyUi, sanitizeThemeTokens } from '../security/validation';
 
 interface PageRow {
@@ -249,26 +248,47 @@ export async function upsertExperimentAssignment(args: {
   visitorKey: string;
   variantId: string;
   ttlDays: number;
-}): Promise<void> {
+}): Promise<{ variantId: string }> {
   const assignedAt = new Date();
   const expiresAt = new Date(assignedAt.getTime() + args.ttlDays * 86400_000);
+  const assignedAtIso = assignedAt.toISOString();
+  const expiresAtIso = expiresAt.toISOString();
+  const assignmentId = await stableAssignmentId(args.pageId, args.experimentId, args.visitorKey);
 
   await args.db
     .prepare(`
       INSERT INTO variant_assignments (
         id, experiment_id, page_id, visitor_key, variant_id, assigned_at, expires_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        variant_id = excluded.variant_id,
+        assigned_at = excluded.assigned_at,
+        expires_at = excluded.expires_at
+      WHERE variant_assignments.expires_at <= ?
     `)
     .bind(
-      makeId('va'),
+      assignmentId,
       args.experimentId,
       args.pageId,
       args.visitorKey,
       args.variantId,
-      assignedAt.toISOString(),
-      expiresAt.toISOString()
+      assignedAtIso,
+      expiresAtIso,
+      assignedAtIso
     )
     .run();
+
+  const persisted = await args.db
+    .prepare(`
+      SELECT variant_id
+      FROM variant_assignments
+      WHERE id = ? AND expires_at > ?
+      LIMIT 1
+    `)
+    .bind(assignmentId, assignedAtIso)
+    .first<{ variant_id: string }>();
+
+  return { variantId: persisted?.variant_id ?? args.variantId };
 }
 
 export async function getActiveAssignment(args: {
@@ -299,6 +319,14 @@ function safeParseJson(value: string | null): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+async function stableAssignmentId(pageId: string, experimentId: string, visitorKey: string): Promise<string> {
+  const source = `${pageId}:${experimentId}:${visitorKey}`;
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(source));
+  const bytes = new Uint8Array(digest);
+  const hex = Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `va_${hex.slice(0, 48)}`;
 }
 
 function sanitizeContentOverrides(input: Record<string, unknown>): Record<string, unknown> | null {

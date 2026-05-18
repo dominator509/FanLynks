@@ -81,7 +81,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         contentOverrides: variant.contentOverrides ?? null
       };
 
-      await upsertExperimentAssignment({
+      const persistedAssignment = await upsertExperimentAssignment({
         db: context.env.DB,
         pageId: snapshot.pageId,
         experimentId: experiment.id,
@@ -89,6 +89,20 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         variantId: variant.variantId,
         ttlDays: experiment.assignmentTtlDays
       });
+
+      if (persistedAssignment.variantId !== variant.variantId) {
+        const persistedVariant = experiment.variants.find((row) => row.variantId === persistedAssignment.variantId);
+        if (persistedVariant) {
+          assignedVariant = {
+            experimentId: persistedVariant.experimentId,
+            variantId: persistedVariant.variantId,
+            variantName: persistedVariant.variantName,
+            weight: persistedVariant.weight,
+            tokens: persistedVariant.tokens,
+            contentOverrides: persistedVariant.contentOverrides ?? null
+          };
+        }
+      }
     }
   }
 
