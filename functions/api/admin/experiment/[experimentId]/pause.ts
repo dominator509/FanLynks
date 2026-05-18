@@ -1,6 +1,7 @@
 import { errorJson, json } from '../../../_utils';
 import { requireExperimentAccess } from '../_shared';
 import { pauseExperiment, writeAuditLog } from '../../../../../src/server/experiments/service';
+import { refreshPublishedPageCache } from '../../../../../src/server/page/cache';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const access = await requireExperimentAccess(context as EventContext<Env, string, unknown>);
@@ -17,8 +18,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       targetId: access.experimentId,
       diff: { status: experiment.status }
     });
-    return json({ ok: true, experiment });
+    const cacheState = await refreshPublishedPageCache({
+      db: context.env.DB,
+      cache: context.env.PAGE_CACHE,
+      pageId: access.pageId
+    });
+    return json({ ok: true, experiment, cacheRefreshed: true, slug: cacheState.slug });
   } catch (error) {
-    return errorJson(error instanceof Error ? error.message : 'Unable to pause experiment.', 400);
+    const message = error instanceof Error ? error.message : 'Unable to pause experiment.';
+    return errorJson(message, message === 'Published cache refresh failed.' ? 500 : 400);
   }
 };

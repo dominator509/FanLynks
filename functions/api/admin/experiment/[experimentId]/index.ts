@@ -1,6 +1,7 @@
 import { errorJson, json, readJson } from '../../../_utils';
 import { requireExperimentAccess } from '../_shared';
 import { getExperimentById, updateExperiment, writeAuditLog, type ExperimentStatus, type VariantInput } from '../../../../../src/server/experiments/service';
+import { refreshPublishedPageCache } from '../../../../../src/server/page/cache';
 
 interface UpdateExperimentBody {
   name?: string;
@@ -47,8 +48,15 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       }
     });
 
-    return json({ ok: true, experiment });
+    const cacheState = await refreshPublishedPageCache({
+      db: context.env.DB,
+      cache: context.env.PAGE_CACHE,
+      pageId: access.pageId
+    });
+
+    return json({ ok: true, experiment, cacheRefreshed: true, slug: cacheState.slug });
   } catch (error) {
-    return errorJson(error instanceof Error ? error.message : 'Unable to update experiment.', 400);
+    const message = error instanceof Error ? error.message : 'Unable to update experiment.';
+    return errorJson(message, message === 'Published cache refresh failed.' ? 500 : 400);
   }
 };

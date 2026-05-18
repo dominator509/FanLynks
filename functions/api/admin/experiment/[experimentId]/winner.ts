@@ -1,6 +1,7 @@
 import { errorJson, json, readJson } from '../../../_utils';
 import { requireExperimentAccess } from '../_shared';
 import { chooseWinner, writeAuditLog } from '../../../../../src/server/experiments/service';
+import { refreshPublishedPageCache } from '../../../../../src/server/page/cache';
 
 interface WinnerBody {
   winnerVariantId?: string;
@@ -25,8 +26,14 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       targetId: access.experimentId,
       diff: { winnerVariantId }
     });
-    return json({ ok: true, experiment });
+    const cacheState = await refreshPublishedPageCache({
+      db: context.env.DB,
+      cache: context.env.PAGE_CACHE,
+      pageId: access.pageId
+    });
+    return json({ ok: true, experiment, cacheRefreshed: true, slug: cacheState.slug });
   } catch (error) {
-    return errorJson(error instanceof Error ? error.message : 'Unable to choose winner.', 400);
+    const message = error instanceof Error ? error.message : 'Unable to choose winner.';
+    return errorJson(message, message === 'Published cache refresh failed.' ? 500 : 400);
   }
 };

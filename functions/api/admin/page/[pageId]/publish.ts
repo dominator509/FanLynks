@@ -1,7 +1,7 @@
 import { errorJson, json } from '../../../_utils';
-import { publishedPageKey, variantManifestKey } from '../../../../../src/server/cache/keys';
 import { validateAdminSession } from '../../../../../src/server/auth/session';
 import { buildPublishedPagePayloadById } from '../../../../../src/server/page/payload';
+import { refreshPublishedPageCache } from '../../../../../src/server/page/cache';
 import { makeId } from '../../../../../src/server/db/ids';
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
@@ -37,36 +37,19 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     )
   ]);
 
-  const refreshed = await buildPublishedPagePayloadById(context.env.DB, pageId, nowIso);
-  if (!refreshed) return errorJson('Unable to rebuild page snapshot.', 500);
-
-  const pageSnapshot = {
-    payload: refreshed.payload,
-    pageId: refreshed.pageId,
-    tenantId: refreshed.tenantId
-  };
-
-  await context.env.PAGE_CACHE.put(publishedPageKey(refreshed.payload.page.slug), JSON.stringify(pageSnapshot));
-
-  if (refreshed.payload.experiment) {
-    await context.env.PAGE_CACHE.put(
-      variantManifestKey(pageId),
-      JSON.stringify({
-        experimentId: refreshed.payload.experiment.id,
-        variants: refreshed.payload.experiment.variants.map((variant) => ({
-          variantId: variant.variantId,
-          variantName: variant.variantName
-        })),
-        generatedAt: nowIso
-      })
-    );
-  }
+  const cacheState = await refreshPublishedPageCache({
+    db: context.env.DB,
+    cache: context.env.PAGE_CACHE,
+    pageId,
+    nowIso
+  });
 
   return json({
     ok: true,
     published: true,
     pageId,
-    slug: refreshed.payload.page.slug,
-    publishedVersion: refreshed.payload.page.publishedVersion
+    slug: cacheState.slug,
+    publishedVersion: cacheState.publishedVersion,
+    cacheRefreshed: true
   });
 };
