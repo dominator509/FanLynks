@@ -1,10 +1,10 @@
 # Functional Coverage Report
 
-Generated: 2026-05-17
+Generated: 2026-05-18
 
 ## Verification Summary
 
-- `npm test`: 7 test files passed, 25 tests passed.
+- `npm test`: 9 test files passed, 32 tests passed.
 - `npm run test:coverage`: passed.
 - `npm run typecheck`: passed.
 - `npm run deploy:check`: passed.
@@ -14,9 +14,9 @@ Coverage snapshot from the final run:
 | Metric | Result |
 | --- | ---: |
 | Statements | 80.48% |
-| Branches | 66.58% |
-| Functions | 95.23% |
-| Lines | 85.90% |
+| Branches | 64.88% |
+| Functions | 91.66% |
+| Lines | 84.85% |
 
 The suite is deterministic and uses in-memory mocks for Cloudflare D1 and KV boundaries. It does not call live Cloudflare, Turnstile, GitHub, analytics providers, or production URLs.
 
@@ -92,13 +92,24 @@ State invariants verified:
 - Analytics event bursts persist all expected events without storing blocked admin event names.
 - Unsafe client-supplied event destination URLs fall back to stored link URLs.
 
+## Production API Handler Coverage Added
+
+Added request-level handler coverage for production-critical Cloudflare Pages Functions:
+
+- Admin login success verifies Turnstile, password hash, audit write, user reset, and secure admin session cookie.
+- Admin failed password increments failed count, records audit detail, and locks at the configured threshold.
+- Admin login rate limiting blocks repeated email attempts before password verification.
+- Admin session refresh reissues a cookie only for a valid current session.
+- Admin session validation rejects revoked session versions.
+- Admin publish requires a valid session, verifies ownership, increments published version, writes audit state, refreshes KV cache, and deletes stale experiment manifests when no experiment is live.
+- Privacy consent writes both consent records and first-party analytics events while issuing visitor/session cookies.
+- Public page API serves cached KV snapshots and falls back to D1 rebuild when the KV snapshot is missing.
+
 ## Known Remaining Coverage Gaps
 
-- Admin Pages Function handlers should receive request-level integration tests with mocked authenticated sessions.
-- Rate-limit behavior should be covered at the API handler layer with deterministic KV counters and retry windows.
-- Consent write endpoint should be tested with malformed payloads, repeated writes, and public cookie behavior.
-- Login endpoint should be tested for lockout transitions, failed-login audit rows, and session cookie attributes.
-- Public page API handler should be tested with KV hit, D1 fallback, missing slug, and experiment assignment cookie behavior.
+- Admin editor mutation endpoints beyond publish should receive request-level tests with mocked authenticated sessions.
+- Consent endpoint should add malformed payload and repeated-write rate-limit tests.
+- Public page API should add missing slug and experiment assignment cookie behavior tests.
 - Browser-level tests should still be added for the admin workspace, public CTA flow, privacy modal, and mobile layout.
 
 ## Result

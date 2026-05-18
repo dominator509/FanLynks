@@ -12,6 +12,13 @@ export function makeD1(routes: QueryRoute[]): D1Database {
   return {
     prepare(sql: string) {
       return makeStatement(sql, routes, []);
+    },
+    async batch(statements: D1PreparedStatement[]) {
+      const results: D1Result[] = [];
+      for (const statement of statements) {
+        results.push(await statement.run());
+      }
+      return results;
     }
   } as D1Database;
 }
@@ -23,8 +30,10 @@ export function makeKV(): KVNamespace & { values: Map<string, string>; deleted: 
   return {
     values,
     deleted,
-    async get(key: string) {
-      return values.get(key) ?? null;
+    async get(key: string, type?: string) {
+      const raw = values.get(key) ?? null;
+      if (raw && type === 'json') return JSON.parse(raw);
+      return raw;
     },
     async put(key: string, value: string) {
       values.set(key, value);
