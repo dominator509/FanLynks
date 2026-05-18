@@ -15,17 +15,31 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   if (page.tenant_id !== session.tenantId) return errorJson('Forbidden.', 403);
 
   const body = await readJson(context.request);
-  const orderedLinkIds = Array.isArray(body?.orderedLinkIds) ? body.orderedLinkIds.filter((v: unknown) => typeof v === 'string') : [];
+  const orderedLinkIds: string[] = Array.isArray(body?.orderedLinkIds)
+    ? body.orderedLinkIds.filter((v: unknown): v is string => typeof v === 'string')
+    : [];
   if (!orderedLinkIds.length) return errorJson('orderedLinkIds is required.', 400);
+  const uniqueOrderedIds = new Set(orderedLinkIds);
+  if (uniqueOrderedIds.size !== orderedLinkIds.length) return errorJson('orderedLinkIds must be unique.', 400);
+
+  const existing = await context.env.DB.prepare(`
+    SELECT id
+    FROM page_links
+    WHERE page_id = ?
+  `).bind(pageId).all<{ id: string }>();
+  const existingIds = new Set((existing.results ?? []).map((row) => row.id));
+  if (existingIds.size !== orderedLinkIds.length || orderedLinkIds.some((id) => !existingIds.has(id))) {
+    return errorJson('orderedLinkIds must include every link on the page exactly once.', 400);
+  }
 
   const now = new Date().toISOString();
-  for (let index = 0; index < orderedLinkIds.length; index += 1) {
-    await context.env.DB.prepare(`
+  await context.env.DB.batch(orderedLinkIds.map((linkId, index) => (
+    context.env.DB.prepare(`
       UPDATE page_links
       SET row_order = ?, updated_at = ?
       WHERE id = ? AND page_id = ?
-    `).bind(index + 1, now, orderedLinkIds[index], pageId).run();
-  }
+    `).bind(index + 1, now, linkId, pageId)
+  )));
 
   return json({ ok: true, reordered: orderedLinkIds.length });
 };
