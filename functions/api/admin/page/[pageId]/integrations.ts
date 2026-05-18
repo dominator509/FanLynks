@@ -18,9 +18,9 @@ function normalizeProviderConfig(provider: Provider, input: Record<string, unkno
     config.measurementId = source.measurementId.trim();
   }
   if (provider === 'ga4') {
-    config.trackPageViews = source.trackPageViews !== false;
-    config.trackClickEvents = source.trackClickEvents !== false;
-    config.includeExperimentParams = source.includeExperimentParams !== false;
+    config.enablePageViews = (source.enablePageViews ?? source.trackPageViews) !== false;
+    config.enableClickEvents = (source.enableClickEvents ?? source.trackClickEvents) !== false;
+    config.enableExperimentParameters = (source.enableExperimentParameters ?? source.includeExperimentParams) !== false;
   }
 
   if (provider === 'meta' && typeof source.pixelId === 'string' && /^\d{6,32}$/.test(source.pixelId.trim())) {

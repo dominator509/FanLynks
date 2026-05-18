@@ -611,6 +611,8 @@
   function dispatchGa4(config, payload) {
     const measurementId = config?.measurementId;
     if (!measurementId) return;
+    if (payload.event_name === 'page_view' && config?.enablePageViews === false) return;
+    if (payload.event_name !== 'page_view' && config?.enableClickEvents === false) return;
     if (!state.providers.ga4.initialized) {
       window.dataLayer = window.dataLayer || [];
       window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
@@ -619,7 +621,12 @@
       window.gtag('config', measurementId, { send_page_view: false });
       state.providers.ga4.initialized = true;
     }
-    window.gtag('event', mapGa4EventName(payload.event_name), buildCommonParams(payload));
+    const params = buildCommonParams(payload);
+    if (config?.enableExperimentParameters === false) {
+      delete params.experiment_id;
+      delete params.variant_id;
+    }
+    window.gtag('event', mapGa4EventName(payload.event_name), params);
   }
 
   function dispatchMeta(config, payload) {

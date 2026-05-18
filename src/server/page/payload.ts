@@ -359,9 +359,9 @@ function sanitizeIntegrationConfig(provider: IntegrationRow['provider'], input: 
     if (typeof input.measurementId === 'string' && /^G-[A-Z0-9]{6,20}$/.test(input.measurementId.trim())) {
       output.measurementId = input.measurementId.trim();
     }
-    output.trackPageViews = input.trackPageViews !== false;
-    output.trackClickEvents = input.trackClickEvents !== false;
-    output.includeExperimentParams = input.includeExperimentParams !== false;
+    output.enablePageViews = (input.enablePageViews ?? input.trackPageViews) !== false;
+    output.enableClickEvents = (input.enableClickEvents ?? input.trackClickEvents) !== false;
+    output.enableExperimentParameters = (input.enableExperimentParameters ?? input.includeExperimentParams) !== false;
   }
 
   if (provider === 'meta') {
