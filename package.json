@@ -11,11 +11,15 @@
     "seed:show": "node scripts/generate-dev-seed.mjs --stdout",
     "hash:password": "node scripts/generate-password-hash.mjs",
     "smoke": "node scripts/smoke-test.mjs",
-    "deploy:check": "node scripts/check-deploy-ready.mjs"
+    "deploy:check": "node scripts/check-deploy-ready.mjs",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260405.0",
+    "@vitest/coverage-v8": "^4.1.6",
     "typescript": "^5.8.3",
-    "wrangler": "^4.10.0",
-    "@cloudflare/workers-types": "^4.20260405.0"
+    "vitest": "^4.1.6",
+    "wrangler": "^4.10.0"
   }
 }
