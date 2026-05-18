@@ -1,12 +1,12 @@
 import { errorJson, json, readJson } from '../../../_utils';
 import { requireExperimentAccess } from '../_shared';
-import { getExperimentById, updateExperiment, writeAuditLog, type ExperimentStatus, type VariantInput } from '../../../../../src/server/experiments/service';
+import { getExperimentById, updateExperiment, writeAuditLog, type VariantInput } from '../../../../../src/server/experiments/service';
 import { refreshPublishedPageCache } from '../../../../../src/server/page/cache';
 
 interface UpdateExperimentBody {
   name?: string;
   assignmentTtlDays?: number;
-  status?: ExperimentStatus;
+  status?: unknown;
   variants?: VariantInput[];
 }
 
@@ -25,12 +25,14 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
   const body = (await readJson(context.request)) as UpdateExperimentBody | null;
   if (!body || typeof body !== 'object') return errorJson('Invalid request body.', 400);
+  if (body.status !== undefined) {
+    return errorJson('Use the dedicated experiment lifecycle endpoints to change status.', 400);
+  }
 
   try {
     const experiment = await updateExperiment(context.env.DB, access.experimentId, {
       name: typeof body.name === 'string' ? body.name : undefined,
       assignmentTtlDays: typeof body.assignmentTtlDays === 'number' ? body.assignmentTtlDays : undefined,
-      status: typeof body.status === 'string' ? body.status : undefined,
       variants: Array.isArray(body.variants) ? body.variants : undefined
     });
 
