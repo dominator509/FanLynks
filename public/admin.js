@@ -74,6 +74,17 @@ function setStatus(message, isError = false) {
   els.status.style.color = isError ? '#ff8d9c' : '#a9b1c7';
 }
 
+function showTurnstileError(errorCode) {
+  els.turnstileToken.value = '';
+  const code = String(errorCode || 'unknown');
+  const message = code.startsWith('110')
+    ? `Turnstile configuration error (${code}). Add ${window.location.hostname} to this widget's allowed hostnames in Cloudflare Turnstile.`
+    : `Turnstile error (${code}). Refresh and try again.`;
+  els.turnstileWidget.textContent = message;
+  setStatus(message, true);
+  return true;
+}
+
 function updatePublishMeta() {
   const page = state.payload?.page;
   if (els.pageSlugChip) els.pageSlugChip.textContent = `Slug: ${page?.slug || '—'}`;
@@ -626,7 +637,7 @@ async function loadTurnstile() {
       action: 'admin_login',
       callback: (token) => { els.turnstileToken.value = token; },
       'expired-callback': () => { els.turnstileToken.value = ''; },
-      'error-callback': () => { els.turnstileToken.value = ''; }
+      'error-callback': showTurnstileError
     });
   } catch (error) {
     els.turnstileWidget.textContent = error.message || 'Unable to load Turnstile.';
