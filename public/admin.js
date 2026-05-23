@@ -39,6 +39,7 @@ const EXP_PRESETS = [
 
 const els = {
   email: $('email'), password: $('password'), turnstileToken: $('turnstileToken'), turnstileWidget: $('turnstileWidget'), loginBtn: $('loginBtn'), logoutBtn: $('logoutBtn'), loginPanel: $('loginPanel'),
+  passwordPanel: $('passwordPanel'), currentPassword: $('currentPassword'), newPassword: $('newPassword'), confirmPassword: $('confirmPassword'), changePasswordBtn: $('changePasswordBtn'),
   pageId: $('pageId'), loadBtn: $('loadBtn'), previewBtn: $('previewBtn'), status: $('status'),
   pageTitle: $('pageTitle'), pageSubtitle: $('pageSubtitle'), pageAvatar: $('pageAvatar'), heroLabel: $('heroLabel'), heroUrl: $('heroUrl'),
   announcementEnabled: $('announcementEnabled'), announcementText: $('announcementText'), announcementUrl: $('announcementUrl'), trackingMode: $('trackingMode'), privacyMode: $('privacyMode'), savePageBtn: $('savePageBtn'), publishPageBtn: $('publishPageBtn'), pageSlugChip: $('pageSlugChip'), pageVersionChip: $('pageVersionChip'),
@@ -134,6 +135,7 @@ function updateSessionUi() {
   const active = Boolean(info?.authenticated);
   els.sessionState.classList.toggle('hidden', !active);
   els.sessionRefreshBtn.classList.toggle('hidden', !active);
+  if (els.passwordPanel) els.passwordPanel.classList.toggle('hidden', !active);
   if (!active) return;
   els.sessionState.textContent = relativeSessionLabel(info.user?.expiresAt);
   const ms = expiresInMs(info.user?.expiresAt);
@@ -144,6 +146,7 @@ function handleSessionExpired() {
   state.sessionInfo = null;
   updateSessionUi();
   els.loginPanel.classList.remove('hidden');
+  if (els.passwordPanel) els.passwordPanel.classList.add('hidden');
   els.logoutBtn.classList.add('hidden');
 }
 function analyticsSinceIso() {
@@ -602,6 +605,7 @@ async function checkSession(refresh = false) {
     state.sessionInfo = data || null;
     els.loginPanel.classList.toggle('hidden', authed);
     els.logoutBtn.classList.toggle('hidden', !authed);
+    if (els.passwordPanel) els.passwordPanel.classList.toggle('hidden', !authed);
     updateSessionUi();
   } catch {
     handleSessionExpired();
@@ -705,6 +709,33 @@ async function logout() {
     await api('/api/admin/logout', { method: 'POST', headers: {} });
     await checkSession();
     setStatus('Logged out.');
+  } catch (error) {
+    setStatus(error.message, true);
+  }
+}
+
+function clearPasswordFields() {
+  if (els.currentPassword) els.currentPassword.value = '';
+  if (els.newPassword) els.newPassword.value = '';
+  if (els.confirmPassword) els.confirmPassword.value = '';
+}
+
+async function changePassword() {
+  setStatus('Changing password...');
+  try {
+    await api('/api/admin/password', {
+      method: 'POST',
+      body: JSON.stringify({
+        currentPassword: els.currentPassword.value,
+        newPassword: els.newPassword.value,
+        confirmPassword: els.confirmPassword.value
+      })
+    });
+    clearPasswordFields();
+    state.sessionInfo = null;
+    handleSessionExpired();
+    setStatus('Password changed. Log in again.', true);
+    resetTurnstile();
   } catch (error) {
     setStatus(error.message, true);
   }
@@ -1082,6 +1113,7 @@ function escapeAttr(value) { return escapeHtml(value); }
 function wire() {
   els.loginBtn.onclick = login;
   els.logoutBtn.onclick = logout;
+  if (els.changePasswordBtn) els.changePasswordBtn.onclick = changePassword;
   els.loadBtn.onclick = loadPage;
   els.previewBtn.onclick = () => {
     if (!state.payload?.page?.slug) return setStatus('Load a page first.', true);
