@@ -21,3 +21,7 @@
 /admin.js
   Cache-Control: no-store
   Pragma: no-cache
+
+/app.js
+  Cache-Control: no-store
+  Pragma: no-cache
