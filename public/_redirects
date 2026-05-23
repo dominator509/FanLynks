@@ -1,6 +1,3 @@
-https://www.fanlynks.com/* https://fanlynks.com/:splat 301
-/home / 301
-/index.html / 301
 /api/* /api/:splat 200
 /assets/* /assets/:splat 200
 /join /join/index.html 200

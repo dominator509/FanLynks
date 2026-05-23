@@ -35,8 +35,31 @@ function applySecurityHeaders(request: Request, response: Response): Response {
   });
 }
 
+function canonicalRedirect(request: Request): Response | null {
+  const url = new URL(request.url);
+  const isFanLynksHost = url.hostname === 'fanlynks.com' || url.hostname === 'www.fanlynks.com';
+  if (!isFanLynksHost) return null;
+
+  const shouldUseApex = url.hostname === 'www.fanlynks.com';
+  const shouldUseRoot = url.pathname === '/home' || url.pathname === '/index.html';
+  if (!shouldUseApex && !shouldUseRoot) return null;
+
+  if (shouldUseApex) url.hostname = 'fanlynks.com';
+  if (shouldUseRoot) url.pathname = '/';
+
+  return new Response(null, {
+    status: 301,
+    headers: {
+      location: url.toString()
+    }
+  });
+}
+
 export const onRequest: PagesFunction = async (context) => {
   try {
+    const redirect = canonicalRedirect(context.request);
+    if (redirect) return applySecurityHeaders(context.request, redirect);
+
     const response = await context.next();
     return applySecurityHeaders(context.request, response);
   } catch (error) {
