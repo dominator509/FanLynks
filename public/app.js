@@ -35,11 +35,11 @@
     neutralText: '#f5f0e8',
     border: '#302819',
     iconBg: '#ffffff',
-    shadow: '0 24px 64px rgba(0,0,0,0.28)',
-    radius: '22px',
-    buttonRadius: '18px',
-    fontBody: 'Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    fontHeading: 'Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    shadow: '0 18px 44px rgba(0,0,0,0.24)',
+    radius: '10px',
+    buttonRadius: '8px',
+    fontBody: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontHeading: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     maxWidth: '720px',
     gap: '14px'
   };

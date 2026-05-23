@@ -38,10 +38,10 @@
         --neutral-text: #f5f0e8;
         --border: #302819;
         --icon-bg: #ffffff;
-        --shadow: 0 24px 64px rgba(0,0,0,0.28);
-        --radius: 22px;
-        --button-radius: 18px;
-        --font-body: Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --shadow: 0 18px 44px rgba(0,0,0,0.24);
+        --radius: 10px;
+        --button-radius: 8px;
+        --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         --font-heading: var(--font-body);
         --max-width: 720px;
         --gap: 14px;
@@ -53,12 +53,14 @@
         font-family: var(--font-body);
         background: var(--bg-accent), var(--bg);
         color: var(--text);
-        font-weight: 600;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.45;
       }
 
       .app {
         min-height: 100vh;
-        padding: 20px 16px 56px;
+        padding: 18px 14px 54px;
       }
 
       .shell {
@@ -80,18 +82,18 @@
         display: none;
         text-decoration: none;
         color: var(--text);
-        padding: 12px 16px;
-        margin-bottom: 14px;
-        font-size: 0.95rem;
+        padding: 11px 13px;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
         align-items: center;
         justify-content: space-between;
       }
-      .announcement strong { font-weight: 700; }
+      .announcement strong { font-weight: 650; }
       .announcement .arrow { opacity: 0.7; }
 
       .hero {
-        padding: 24px 20px;
-        margin-bottom: 18px;
+        padding: 20px 18px;
+        margin-bottom: 16px;
       }
       .hero-top {
         display: flex;
@@ -100,9 +102,9 @@
         margin-bottom: 12px;
       }
       .avatar {
-        width: 66px;
-        height: 66px;
-        border-radius: 18px;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
         object-fit: cover;
         background: rgba(255,255,255,0.08);
         border: 1px solid var(--border);
@@ -110,25 +112,25 @@
       }
       .eyebrow {
         color: var(--accent);
-        font-size: 0.8rem;
+        font-size: 0.76rem;
         letter-spacing: 0;
         text-transform: uppercase;
-        font-weight: 700;
+        font-weight: 650;
         margin-bottom: 6px;
       }
       h1 {
         margin: 0;
         font-family: var(--font-heading);
-        font-size: clamp(1.9rem, 5vw, 2.7rem);
-        line-height: 1.05;
+        font-size: clamp(1.7rem, 4.8vw, 2.35rem);
+        line-height: 1.08;
         letter-spacing: 0;
-        font-weight: 700;
+        font-weight: 650;
       }
       .subtitle {
         margin: 10px 0 0;
         color: var(--muted);
-        font-size: 1rem;
-        line-height: 1.55;
+        font-size: 0.96rem;
+        line-height: 1.5;
       }
       .hero-cta {
         display: inline-flex;
@@ -139,7 +141,7 @@
         font-weight: 800;
         font-size: 1rem;
         letter-spacing: 0;
-        padding: 15px 18px;
+        padding: 12px 14px;
         border-radius: var(--button-radius);
         background: var(--primary-bg);
         color: var(--primary-text);
@@ -147,12 +149,12 @@
       }
 
       .section-label {
-        font-size: 0.82rem;
+        font-size: 0.76rem;
         letter-spacing: 0;
         text-transform: uppercase;
         color: var(--muted);
         margin: 18px 4px 10px;
-        font-weight: 800;
+        font-weight: 650;
       }
 
       .links {
@@ -164,14 +166,14 @@
         position: relative;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 12px;
         width: 100%;
         max-width: 100%;
         min-width: 0;
         overflow: hidden;
         text-decoration: none;
         color: inherit;
-        padding: 14px;
+        padding: 12px;
         border-radius: var(--button-radius);
         border: 1px solid var(--border);
         background: var(--secondary-bg);
@@ -191,9 +193,9 @@
       }
 
       .icon-slot {
-        width: 52px;
-        height: 52px;
-        border-radius: 15px;
+        width: 46px;
+        height: 46px;
+        border-radius: 8px;
         background: var(--icon-bg);
         border: 1px solid rgba(255,255,255,0.1);
         display: flex;
@@ -229,8 +231,8 @@
         overflow: hidden;
       }
       .title {
-        font-weight: 800;
-        font-size: 1rem;
+        font-weight: 650;
+        font-size: 0.95rem;
         letter-spacing: 0;
         min-width: 0;
         max-width: 100%;
@@ -239,8 +241,8 @@
         text-overflow: ellipsis;
       }
       .badge {
-        font-size: 0.72rem;
-        padding: 5px 8px;
+        font-size: 0.7rem;
+        padding: 4px 7px;
         border-radius: 999px;
         border: 1px solid rgba(255,255,255,0.14);
         color: var(--muted);
@@ -252,7 +254,7 @@
       }
       .subtitle-small {
         margin-top: 4px;
-        font-size: 0.9rem;
+        font-size: 0.86rem;
         color: var(--muted);
         line-height: 1.35;
         display: -webkit-box;
@@ -265,7 +267,7 @@
       }
       .chevron {
         opacity: 0.5;
-        font-size: 1.15rem;
+        font-size: 1rem;
         flex-shrink: 0;
       }
 
@@ -273,14 +275,14 @@
         margin-top: 18px;
         text-align: center;
         color: var(--muted);
-        font-size: 0.85rem;
+        font-size: 0.82rem;
       }
       .footer button {
         margin-top: 10px;
         border: 0;
         background: transparent;
         color: var(--text);
-        font-weight: 700;
+        font-weight: 650;
         text-decoration: underline;
         cursor: pointer;
       }
@@ -298,7 +300,7 @@
         z-index: 20;
         display: none;
         pointer-events: auto;
-        padding: 18px;
+        padding: 16px;
         background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, black 6%), color-mix(in srgb, var(--surface) 86%, transparent));
       }
       .privacy-banner h2 {
@@ -308,7 +310,7 @@
       .privacy-banner p {
         margin: 0;
         color: var(--muted);
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         line-height: 1.45;
       }
       .privacy-banner .privacy-note {
@@ -326,11 +328,11 @@
       .privacy-actions button {
         appearance: none;
         border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 12px 14px;
-        font-weight: 800;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-weight: 650;
         cursor: pointer;
-        min-height: 46px;
+        min-height: 40px;
         box-shadow: 0 10px 24px rgba(0,0,0,0.14);
         pointer-events: auto;
       }
@@ -361,9 +363,9 @@
 
       @media (min-width: 740px) {
         .app { padding-top: 40px; }
-        .hero { padding: 30px 28px; }
-        .announcement { padding: 14px 18px; }
-        .link-row { padding: 16px; }
+        .hero { padding: 24px 24px; }
+        .announcement { padding: 12px 14px; }
+        .link-row { padding: 13px; }
         .privacy-banner { max-width: 720px; margin: 0 auto; left: 50%; right: auto; transform: translateX(-50%); }
       }
     </style>
@@ -409,6 +411,6 @@
       </div>
     </section>
 
-    <script src="/app.js?v=20260523-qa1" defer></script>
+    <script src="/app.js?v=20260523-style1" defer></script>
   </body>
 </html>

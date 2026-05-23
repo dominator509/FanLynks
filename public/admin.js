@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 
 const DEFAULT_PRESET = 'fanlynks_dark';
-const FANLYNKS_FONT = 'Montserrat, ui-sans-serif, system-ui, sans-serif';
+const FANLYNKS_FONT = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 const PRESETS = {
   fanlynks_dark: {
