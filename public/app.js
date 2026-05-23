@@ -67,7 +67,10 @@
   });
 
   async function boot() {
-    dom.privacyChoices.addEventListener('click', () => showPrivacyBanner());
+    dom.privacyChoices.addEventListener('click', () => {
+      prepareStandardPrivacyBanner();
+      showPrivacyBanner();
+    });
     const acceptHandler = () => updateConsent('granted', 'granted');
     const analyticsOnlyHandler = () => updateConsent('granted', 'denied');
     const declineHandler = () => updateConsent('denied', 'denied');
@@ -400,15 +403,7 @@
   function maybeShowPrivacyBanner() {
     const key = consentAckKey();
     if (state.privacy.regionPolicy === 'uk_strict' && !safeStorageGet(key)) {
-      dom.privacyTitle.textContent = privacyUi().bannerTitle || 'Choose your privacy settings';
-      dom.privacyBody.textContent = privacyUi().bannerBody || 'We use optional analytics and marketing tags only if you allow them. Essential features stay on either way.';
-      dom.privacyAccept.textContent = privacyUi().acceptLabel || 'Allow all';
-      dom.privacyAnalyticsOnly.textContent = privacyUi().analyticsOnlyLabel || 'Analytics only';
-      dom.privacyDecline.textContent = privacyUi().declineLabel || 'Essential only';
-      dom.privacyAccept.hidden = false;
-      dom.privacyAnalyticsOnly.hidden = false;
-      dom.privacyDecline.hidden = false;
-      dom.privacyClose.hidden = true;
+      prepareStandardPrivacyBanner({ closeOnlyAfterChoice: true });
       showPrivacyBanner();
       return;
     }
@@ -422,6 +417,18 @@
       dom.privacyClose.hidden = false;
       if (!safeStorageGet(key)) showPrivacyBanner();
     }
+  }
+
+  function prepareStandardPrivacyBanner(options = {}) {
+    dom.privacyTitle.textContent = privacyUi().bannerTitle || 'Choose your privacy settings';
+    dom.privacyBody.textContent = privacyUi().bannerBody || 'We use optional analytics and marketing tags only if you allow them. Essential features stay on either way.';
+    dom.privacyAccept.textContent = privacyUi().acceptLabel || 'Allow all';
+    dom.privacyAnalyticsOnly.textContent = privacyUi().analyticsOnlyLabel || 'Analytics only';
+    dom.privacyDecline.textContent = privacyUi().declineLabel || 'Essential only';
+    dom.privacyAccept.hidden = false;
+    dom.privacyAnalyticsOnly.hidden = false;
+    dom.privacyDecline.hidden = false;
+    dom.privacyClose.hidden = Boolean(options.closeOnlyAfterChoice);
   }
 
   function showPrivacyBanner() {
