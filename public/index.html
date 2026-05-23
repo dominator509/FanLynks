@@ -166,6 +166,9 @@
         align-items: center;
         gap: 14px;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow: hidden;
         text-decoration: none;
         color: inherit;
         padding: 14px;
@@ -222,11 +225,15 @@
         align-items: center;
         gap: 8px;
         min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
       }
       .title {
         font-weight: 800;
         font-size: 1rem;
         letter-spacing: 0;
+        min-width: 0;
+        max-width: 100%;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -259,6 +266,7 @@
       .chevron {
         opacity: 0.5;
         font-size: 1.15rem;
+        flex-shrink: 0;
       }
 
       .footer {

@@ -17,8 +17,8 @@ function applySecurityHeaders(request: Request, response: Response): Response {
     "img-src 'self' https: data:",
     "font-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
-    "script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://challenges.cloudflare.com",
-    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://challenges.cloudflare.com",
+    "script-src 'self' https://www.googletagmanager.com https://connect.facebook.net https://challenges.cloudflare.com https://static.cloudflareinsights.com",
+    "connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://connect.facebook.net https://challenges.cloudflare.com https://static.cloudflareinsights.com",
     "frame-src https://challenges.cloudflare.com",
     "upgrade-insecure-requests"
   ].join('; '));
