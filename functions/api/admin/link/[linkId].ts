@@ -51,6 +51,18 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
 
   if (!title) return errorJson('Title and URL are required.', 400);
 
+  let sectionId: string | null = null;
+  if (typeof body.sectionId === 'string' && body.sectionId.trim()) {
+    sectionId = body.sectionId.trim();
+    const section = await context.env.DB.prepare(`
+      SELECT id
+      FROM page_sections
+      WHERE id = ? AND page_id = ?
+      LIMIT 1
+    `).bind(sectionId, access.pageId).first<{ id: string }>();
+    if (!section) return errorJson('Section does not belong to this page.', 400);
+  }
+
   await context.env.DB.prepare(`
     UPDATE page_links
     SET section_id = ?,
@@ -68,7 +80,7 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
         updated_at = ?
     WHERE id = ?
   `).bind(
-    typeof body.sectionId === 'string' ? body.sectionId : null,
+    sectionId,
     title,
     normalizeOptionalText(body.subtitle, 180),
     url,

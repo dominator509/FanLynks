@@ -1,9 +1,97 @@
 import { describe, expect, it } from 'vitest';
 import { collectAndPersistEvent } from '../../src/server/analytics/collector';
+import { createExperiment, startExperiment, updateExperiment } from '../../src/server/experiments/service';
 import { getActiveAssignment, upsertExperimentAssignment } from '../../src/server/page/payload';
 import { makeD1 } from '../helpers/mock-cloudflare';
 
 describe('high-concurrency state workflows', () => {
+  it('batches multi-row experiment mutations so lifecycle state cannot be partially applied', async () => {
+    const batchSizes: number[] = [];
+    const db = makeD1([
+      {
+        match: (sql, _params, kind) => kind === 'run' && sql.includes('INSERT INTO experiments'),
+        handler: () => ({ success: true })
+      },
+      {
+        match: (sql, _params, kind) => kind === 'run' && sql.includes('INSERT INTO experiment_variants'),
+        handler: () => ({ success: true })
+      },
+      {
+        match: (sql, _params, kind) => kind === 'run' && sql.includes('UPDATE experiments'),
+        handler: () => ({ success: true })
+      },
+      {
+        match: (sql, _params, kind) => kind === 'run' && sql.includes('UPDATE experiment_variants'),
+        handler: () => ({ success: true })
+      },
+      {
+        match: (sql, _params, kind) => kind === 'first' && sql.includes('FROM experiments') && sql.includes('WHERE id = ?'),
+        first: {
+          id: 'exp_1',
+          page_id: 'page_demo',
+          name: 'CTA order',
+          status: 'draft',
+          assignment_ttl_days: 30,
+          started_at: null,
+          ended_at: null,
+          winner_variant_id: null,
+          created_at: '2026-05-24T00:00:00.000Z',
+          updated_at: '2026-05-24T00:00:00.000Z'
+        }
+      },
+      {
+        match: (sql, _params, kind) => kind === 'all' && sql.includes('FROM experiment_variants'),
+        all: [
+          {
+            id: 'variant_a',
+            experiment_id: 'exp_1',
+            name: 'A',
+            weight: 50,
+            tokens_json: '{}',
+            content_overrides_json: null,
+            is_enabled: 1,
+            created_at: '2026-05-24T00:00:00.000Z',
+            updated_at: '2026-05-24T00:00:00.000Z'
+          },
+          {
+            id: 'variant_b',
+            experiment_id: 'exp_1',
+            name: 'B',
+            weight: 50,
+            tokens_json: '{}',
+            content_overrides_json: null,
+            is_enabled: 1,
+            created_at: '2026-05-24T00:00:00.000Z',
+            updated_at: '2026-05-24T00:00:00.000Z'
+          }
+        ]
+      }
+    ]);
+    const originalBatch = db.batch.bind(db);
+    db.batch = async (statements) => {
+      batchSizes.push(statements.length);
+      return originalBatch(statements);
+    };
+
+    await createExperiment(db, {
+      pageId: 'page_demo',
+      name: 'CTA order',
+      variants: [
+        { name: 'A', weight: 50 },
+        { name: 'B', weight: 50 }
+      ]
+    });
+    await updateExperiment(db, 'exp_1', {
+      variants: [
+        { id: 'variant_a', name: 'A', weight: 60 },
+        { id: 'variant_b', name: 'B', weight: 40 }
+      ]
+    });
+    await startExperiment(db, 'exp_1');
+
+    expect(batchSizes).toEqual([3, 3, 2]);
+  });
+
   it('keeps one active variant assignment stable across concurrent visitor traffic', async () => {
     const assignments = new Map<string, { variant_id: string; assigned_at: string; expires_at: string }>();
     const db = makeD1([

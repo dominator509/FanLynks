@@ -38,6 +38,18 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   if (!title) return errorJson('Title and URL are required.', 400);
 
+  let sectionId: string | null = null;
+  if (typeof body.sectionId === 'string' && body.sectionId.trim()) {
+    sectionId = body.sectionId.trim();
+    const section = await context.env.DB.prepare(`
+      SELECT id
+      FROM page_sections
+      WHERE id = ? AND page_id = ?
+      LIMIT 1
+    `).bind(sectionId, pageId).first<{ id: string }>();
+    if (!section) return errorJson('Section does not belong to this page.', 400);
+  }
+
   const orderRow = await context.env.DB.prepare('SELECT COALESCE(MAX(row_order), 0) AS max_row_order FROM page_links WHERE page_id = ?').bind(pageId).first<{ max_row_order: number }>();
   const rowOrder = Number.isFinite(Number(body.rowOrder)) ? Math.max(1, Math.floor(Number(body.rowOrder))) : (Number(orderRow?.max_row_order || 0) + 1);
   const now = new Date().toISOString();
@@ -51,7 +63,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   `).bind(
     id,
     pageId,
-    typeof body.sectionId === 'string' ? body.sectionId : null,
+    sectionId,
     title,
     normalizeOptionalText(body.subtitle, 180),
     url,

@@ -280,22 +280,23 @@ export async function createExperiment(db: D1Database, input: CreateExperimentIn
   const now = new Date().toISOString();
   const variants = validateVariants(input.variants);
   const experimentId = makeId('exp');
-
-  await db.prepare(`
-    INSERT INTO experiments (
-      id, page_id, name, status, assignment_ttl_days, started_at, ended_at, winner_variant_id, created_at, updated_at
-    ) VALUES (?, ?, ?, 'draft', ?, NULL, NULL, NULL, ?, ?)
-  `).bind(
-    experimentId,
-    input.pageId,
-    input.name.trim(),
-    Math.max(1, Math.floor(input.assignmentTtlDays ?? 30)),
-    now,
-    now
-  ).run();
+  const statements: D1PreparedStatement[] = [
+    db.prepare(`
+      INSERT INTO experiments (
+        id, page_id, name, status, assignment_ttl_days, started_at, ended_at, winner_variant_id, created_at, updated_at
+      ) VALUES (?, ?, ?, 'draft', ?, NULL, NULL, NULL, ?, ?)
+    `).bind(
+      experimentId,
+      input.pageId,
+      input.name.trim(),
+      Math.max(1, Math.floor(input.assignmentTtlDays ?? 30)),
+      now,
+      now
+    )
+  ];
 
   for (const variant of variants) {
-    await db.prepare(`
+    statements.push(db.prepare(`
       INSERT INTO experiment_variants (
         id, experiment_id, name, weight, tokens_json, content_overrides_json, is_enabled, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -309,8 +310,10 @@ export async function createExperiment(db: D1Database, input: CreateExperimentIn
       variant.isEnabled ? 1 : 0,
       now,
       now
-    ).run();
+    ));
   }
+
+  await db.batch(statements);
 
   const created = await getExperimentById(db, experimentId);
   if (!created) throw new Error('Failed to load created experiment.');
@@ -322,7 +325,7 @@ export async function updateExperiment(db: D1Database, experimentId: string, inp
   if (!existing) throw new Error('Experiment not found.');
   const now = new Date().toISOString();
 
-  await db.prepare(`
+  const statements: D1PreparedStatement[] = [db.prepare(`
     UPDATE experiments
     SET name = ?, assignment_ttl_days = ?, status = ?, updated_at = ?
     WHERE id = ?
@@ -332,7 +335,7 @@ export async function updateExperiment(db: D1Database, experimentId: string, inp
     input.status ?? existing.status,
     now,
     experimentId
-  ).run();
+  )];
 
   if (input.variants) {
     const variants = validateVariants(input.variants);
@@ -341,14 +344,14 @@ export async function updateExperiment(db: D1Database, experimentId: string, inp
 
     for (const existingVariantId of existingIds) {
       if (!incomingIds.has(existingVariantId)) {
-        await db.prepare(`DELETE FROM experiment_variants WHERE id = ? AND experiment_id = ?`).bind(existingVariantId, experimentId).run();
+        statements.push(db.prepare(`DELETE FROM experiment_variants WHERE id = ? AND experiment_id = ?`).bind(existingVariantId, experimentId));
       }
     }
 
     for (const variant of variants) {
       const id = variant.id ?? makeId('var');
       if (variant.id && existingIds.has(variant.id)) {
-        await db.prepare(`
+        statements.push(db.prepare(`
           UPDATE experiment_variants
           SET name = ?, weight = ?, tokens_json = ?, content_overrides_json = ?, is_enabled = ?, updated_at = ?
           WHERE id = ? AND experiment_id = ?
@@ -361,9 +364,9 @@ export async function updateExperiment(db: D1Database, experimentId: string, inp
           now,
           variant.id,
           experimentId
-        ).run();
+        ));
       } else {
-        await db.prepare(`
+        statements.push(db.prepare(`
           INSERT INTO experiment_variants (
             id, experiment_id, name, weight, tokens_json, content_overrides_json, is_enabled, created_at, updated_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -377,10 +380,12 @@ export async function updateExperiment(db: D1Database, experimentId: string, inp
           variant.isEnabled ? 1 : 0,
           now,
           now
-        ).run();
+        ));
       }
     }
   }
+
+  await db.batch(statements);
 
   const updated = await getExperimentById(db, experimentId);
   if (!updated) throw new Error('Failed to load updated experiment.');
@@ -392,17 +397,18 @@ export async function startExperiment(db: D1Database, experimentId: string): Pro
   if (!experiment) throw new Error('Experiment not found.');
   const now = new Date().toISOString();
 
-  await db.prepare(`
-    UPDATE experiments
-    SET status = 'paused', updated_at = ?
-    WHERE page_id = ? AND status = 'live' AND id <> ?
-  `).bind(now, experiment.pageId, experimentId).run();
-
-  await db.prepare(`
-    UPDATE experiments
-    SET status = 'live', started_at = COALESCE(started_at, ?), ended_at = NULL, winner_variant_id = NULL, updated_at = ?
-    WHERE id = ?
-  `).bind(now, now, experimentId).run();
+  await db.batch([
+    db.prepare(`
+      UPDATE experiments
+      SET status = 'paused', updated_at = ?
+      WHERE page_id = ? AND status = 'live' AND id <> ?
+    `).bind(now, experiment.pageId, experimentId),
+    db.prepare(`
+      UPDATE experiments
+      SET status = 'live', started_at = COALESCE(started_at, ?), ended_at = NULL, winner_variant_id = NULL, updated_at = ?
+      WHERE id = ?
+    `).bind(now, now, experimentId)
+  ]);
 
   const started = await getExperimentById(db, experimentId);
   if (!started) throw new Error('Failed to load started experiment.');
