@@ -1,7 +1,7 @@
 UPDATE pages SET
   title = 'Fan Lynks — Smarter Bio Links for Creators',
   subtitle = 'A smarter bio link hub for creators who want better analytics, cleaner funnels, and more control.',
-  avatar_url = 'https://custom-link-hub-v5.pages.dev/assets/fanlynks/fanlynks-stamp.png',
+  avatar_url = 'https://fanlynks.com/assets/fanlynks/fanlynks-stamp.png',
   announcement_enabled = 0,
   announcement_text = 'Fan Lynks creator beta is opening soon',
   announcement_url = 'https://fanlynks.com/join',

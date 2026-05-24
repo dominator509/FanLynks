@@ -66,23 +66,34 @@ a {
   justify-content: space-between;
   gap: 18px;
   width: min(100% - 32px, var(--max));
-  min-height: 76px;
+  min-height: 68px;
   margin: 0 auto;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
   text-decoration: none;
 }
 
 .brand img {
-  width: 170px;
-  height: 46px;
+  width: 34px;
+  height: 34px;
   display: block;
-  object-fit: cover;
+  border: 1px solid rgba(207, 160, 41, 0.28);
+  border-radius: 8px;
+  background: #ffffff;
+  object-fit: contain;
   object-position: center;
+}
+
+.brand span {
+  display: inline-block;
 }
 
 .nav-links {
@@ -136,7 +147,7 @@ a {
 }
 
 .hero {
-  min-height: 60vh;
+  min-height: 54vh;
   display: grid;
   align-items: center;
   border-bottom: 1px solid var(--line);
@@ -153,7 +164,7 @@ a {
 
 .hero-copy {
   max-width: 760px;
-  padding: 58px 0;
+  padding: 48px 0;
 }
 
 .eyebrow {
@@ -351,18 +362,24 @@ h3 {
 
 @media (max-width: 820px) {
   .nav {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 14px 0;
+    align-items: center;
+    flex-direction: row;
+    min-height: 68px;
+    padding: 12px 0;
   }
 
   .nav-links {
     justify-content: flex-start;
+    margin-left: auto;
   }
 
   .brand img {
-    width: 154px;
-    height: 44px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand span {
+    font-size: 14px;
   }
 
   .hero {
@@ -394,6 +411,10 @@ h3 {
 
   .button {
     width: 100%;
+  }
+
+  .nav-links .button {
+    width: auto;
   }
 
   .hero-actions,

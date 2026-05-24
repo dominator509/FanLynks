@@ -358,6 +358,11 @@
         span.className = 'icon-emoji';
         span.textContent = link.iconValue;
         icon.appendChild(span);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'icon-fallback';
+        span.textContent = fallbackIconText(link.title);
+        icon.appendChild(span);
       }
       row.appendChild(icon);
 
@@ -737,6 +742,11 @@
     } catch {
       return null;
     }
+  }
+
+  function fallbackIconText(title) {
+    const firstWord = String(title || '').trim().split(/\s+/)[0] || 'F';
+    return firstWord.slice(0, 1).toUpperCase();
   }
 
   function escapeHtml(value) {
