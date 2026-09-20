@@ -42,6 +42,20 @@ async function signValue(secret: string, payload: string): Promise<string> {
   return base64UrlEncode(new Uint8Array(signature));
 }
 
+async function verifySignature(secret: string, encodedPayload: string, signature: string): Promise<boolean> {
+  const key = await importHmacKey(secret);
+  let signatureBytes: Uint8Array;
+  try {
+    signatureBytes = base64UrlDecode(signature);
+  } catch {
+    return false;
+  }
+  // crypto.subtle.verify runs in constant time inside the WebCrypto
+  // implementation, unlike a string comparison of re-computed signatures.
+  // The copy narrows the type to Uint8Array<ArrayBuffer> for BufferSource.
+  return crypto.subtle.verify('HMAC', key, new Uint8Array(signatureBytes), encoder.encode(encodedPayload));
+}
+
 function parseCookieValue(request: Request, name: string): string | null {
   const raw = request.headers.get('cookie');
   if (!raw) return null;
@@ -82,8 +96,7 @@ export async function parseSessionCookie(request: Request, secret: string): Prom
   const [encodedPayload, signature] = token.split('.');
   if (!encodedPayload || !signature) return null;
 
-  const expectedSignature = await signValue(secret, encodedPayload);
-  if (expectedSignature !== signature) return null;
+  if (!(await verifySignature(secret, encodedPayload, signature))) return null;
 
   try {
     const payload = JSON.parse(decoder.decode(base64UrlDecode(encodedPayload))) as AdminSession;
