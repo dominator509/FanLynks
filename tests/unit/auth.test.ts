@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { verifyPassword } from '../../src/server/auth/password';
+import { getPbkdf2Iterations, needsRehash, verifyPassword } from '../../src/server/auth/password';
 import { isKnownTurnstileTestKey, verifyTurnstileToken } from '../../src/server/auth/turnstile';
 
 async function pbkdf2Hash(password: string, salt: string, iterations = 100000): Promise<string> {
@@ -12,15 +12,31 @@ async function pbkdf2Hash(password: string, salt: string, iterations = 100000): 
 }
 
 describe('auth primitives', () => {
-  it('verifies only supported PBKDF2-SHA256 hashes with exact iteration count', async () => {
+  it('verifies PBKDF2-SHA256 hashes at or above the minimum iteration count', async () => {
     const stored = await pbkdf2Hash('correct horse battery staple', 'unit-salt');
     expect(await verifyPassword('correct horse battery staple', stored)).toBe(true);
     expect(await verifyPassword('wrong', stored)).toBe(false);
     expect(await verifyPassword('correct horse battery staple', stored.replace('$100000$', '$99999$'))).toBe(false);
+    const stronger = await pbkdf2Hash('correct horse battery staple', 'unit-salt', 200000);
+    expect(await verifyPassword('correct horse battery staple', stronger)).toBe(true);
     expect(await verifyPassword('correct horse battery staple', 'sha256$legacy')).toBe(false);
     expect(await verifyPassword('pw', 'pbkdf2_sha256$100000$salt$not-valid-base64')).toBe(false);
     expect(await verifyPassword('', stored)).toBe(false);
     expect(await verifyPassword('pw', '')).toBe(false);
+  });
+
+  it('flags hashes below the target iteration count for rehashing', async () => {
+    const current = await pbkdf2Hash('pw', 'unit-salt', 100000);
+    const stronger = await pbkdf2Hash('pw', 'unit-salt', 200000);
+    expect(getPbkdf2Iterations(current)).toBe(100000);
+    expect(getPbkdf2Iterations(stronger)).toBe(200000);
+    expect(getPbkdf2Iterations('sha256$legacy')).toBeNull();
+    // Today the target equals the minimum, so nothing needs rehashing.
+    // When TARGET_PBKDF2_ITERATIONS is raised in the future, older hashes
+    // will transparently return true here and be upgraded on next login.
+    expect(needsRehash(current)).toBe(false);
+    expect(needsRehash(stronger)).toBe(false);
+    expect(needsRehash('sha256$legacy')).toBe(false);
   });
 
   it('identifies Turnstile test secrets and rejects missing/test credentials without fetch', async () => {
