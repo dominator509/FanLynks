@@ -1,6 +1,6 @@
 import { errorJson, json, readJson, setCookieHeaders } from '../_utils';
 import { createSessionCookie } from '../../../src/server/auth/session';
-import { verifyPassword } from '../../../src/server/auth/password';
+import { hashPassword, needsRehash, verifyPassword } from '../../../src/server/auth/password';
 import { verifyTurnstileToken } from '../../../src/server/auth/turnstile';
 import { makeId } from '../../../src/server/db/ids';
 import { checkRateLimit } from '../../../src/server/security/rateLimit';
@@ -230,7 +230,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return errorJson('Invalid credentials.', 401);
   }
 
-  await context.env.DB.batch([
+  const now = new Date().toISOString();
+  const statements: D1PreparedStatement[] = [
     context.env.DB.prepare(`
       UPDATE users
       SET last_login_at = ?,
@@ -238,7 +239,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
           locked_until = NULL,
           updated_at = ?
       WHERE id = ?
-    `).bind(new Date().toISOString(), new Date().toISOString(), user.id),
+    `).bind(now, now, user.id),
     context.env.DB.prepare(`
       INSERT INTO security_events (
         id, tenant_id, user_id, event_type, identifier_hash, ip_hash, user_agent_hash, success, detail_json, created_at
@@ -253,9 +254,24 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       userAgent ? await sha256Hex(userAgent) : null,
       1,
       JSON.stringify({}),
-      new Date().toISOString()
+      now
     )
-  ]);
+  ];
+
+  // Transparently upgrade hashes created with an older (lower) iteration
+  // count now that the plaintext password is available.
+  if (needsRehash(user.password_hash)) {
+    statements.push(
+      context.env.DB.prepare(`
+        UPDATE users
+        SET password_hash = ?,
+            updated_at = ?
+        WHERE id = ?
+      `).bind(await hashPassword(password), now, user.id)
+    );
+  }
+
+  await context.env.DB.batch(statements);
 
   const sessionCookie = await createSessionCookie(
     {

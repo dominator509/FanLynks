@@ -1,5 +1,15 @@
 const encoder = new TextEncoder();
 
+/**
+ * Current PBKDF2 work factor for newly created hashes.
+ * Raise this over time as hardware improves; existing hashes are
+ * transparently upgraded on next successful login via needsRehash().
+ */
+export const TARGET_PBKDF2_ITERATIONS = 100000;
+
+/** Minimum iteration count still accepted for verification. */
+export const MIN_PBKDF2_ITERATIONS = 100000;
+
 function base64ToBytes(value: string): Uint8Array {
   const bin = atob(value);
   return Uint8Array.from(bin, (char) => char.charCodeAt(0));
@@ -50,7 +60,7 @@ function bytesToBase64(bytes: Uint8Array): string {
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  const iterations = 100000;
+  const iterations = TARGET_PBKDF2_ITERATIONS;
   const saltBytes = new Uint8Array(16);
   crypto.getRandomValues(saltBytes);
   const salt = base64UrlEncode(saltBytes);
@@ -82,7 +92,7 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   const parts = storedHash.split('$');
   if (parts[0] === 'pbkdf2_sha256' && parts.length === 4) {
     const iterations = Number(parts[1]);
-    if (!Number.isInteger(iterations) || iterations < 100000 || iterations > 100000) return false;
+    if (!Number.isInteger(iterations) || iterations < MIN_PBKDF2_ITERATIONS) return false;
     try {
       return await verifyPbkdf2Sha256(password, iterations, parts[2], parts[3]);
     } catch {
@@ -91,4 +101,27 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   }
 
   return false;
+}
+
+/**
+ * Parse the iteration count from a stored hash.
+ * Returns null when the hash is not a recognized PBKDF2-SHA256 hash.
+ */
+export function getPbkdf2Iterations(storedHash: string): number | null {
+  const parts = storedHash.split('$');
+  if (parts[0] === 'pbkdf2_sha256' && parts.length === 4) {
+    const iterations = Number(parts[1]);
+    return Number.isInteger(iterations) ? iterations : null;
+  }
+  return null;
+}
+
+/**
+ * Whether a stored hash was created with fewer iterations than the current
+ * target and should be re-hashed. Call after a successful password
+ * verification, when the plaintext password is available.
+ */
+export function needsRehash(storedHash: string): boolean {
+  const iterations = getPbkdf2Iterations(storedHash);
+  return iterations !== null && iterations < TARGET_PBKDF2_ITERATIONS;
 }
