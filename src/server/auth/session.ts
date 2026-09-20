@@ -1,3 +1,5 @@
+import { assertValidSessionSecret } from '../security/env';
+
 export interface AdminSession {
   userId: string;
   tenantId: string;
@@ -52,6 +54,7 @@ function parseCookieValue(request: Request, name: string): string | null {
 }
 
 export async function createSessionCookie(session: Omit<AdminSession, 'issuedAt' | 'expiresAt'>, secret: string): Promise<string> {
+  assertValidSessionSecret(secret);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + SESSION_MAX_AGE_SECONDS * 1000);
   const payload: AdminSession = {
@@ -72,6 +75,7 @@ export function createClearedSessionCookie(): string {
 }
 
 export async function parseSessionCookie(request: Request, secret: string): Promise<AdminSession | null> {
+  assertValidSessionSecret(secret);
   const token = parseCookieValue(request, SESSION_COOKIE);
   if (!token) return null;
 
