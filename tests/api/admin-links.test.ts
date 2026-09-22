@@ -3,6 +3,7 @@ import { onRequestPut as linkPut } from '../../functions/api/admin/link/[linkId]
 import { onRequestPost as linksPost } from '../../functions/api/admin/page/[pageId]/links';
 import { createSessionCookie } from '../../src/server/auth/session';
 import { makeD1 } from '../helpers/mock-cloudflare';
+import { TEST_SESSION_SECRET } from '../helpers/test-secrets';
 
 function context(request: Request, env: Partial<Env>, params: Record<string, string> = {}): EventContext<Env, string, Record<string, string>> {
   return {
@@ -21,7 +22,7 @@ async function adminCookie(): Promise<string> {
     tenantId: 'tenant_1',
     email: 'admin@fanlynks.com',
     sessionVersion: 1
-  }, 'unit-session-secret');
+  }, TEST_SESSION_SECRET);
 }
 
 describe('admin link section boundaries', () => {
@@ -50,7 +51,7 @@ describe('admin link section boundaries', () => {
       })
     }), {
       DB: db,
-      SESSION_SECRET: 'unit-session-secret'
+      SESSION_SECRET: TEST_SESSION_SECRET
     }, { pageId: 'page_demo' }));
 
     expect(response.status).toBe(400);
@@ -90,7 +91,7 @@ describe('admin link section boundaries', () => {
       })
     }), {
       DB: db,
-      SESSION_SECRET: 'unit-session-secret'
+      SESSION_SECRET: TEST_SESSION_SECRET
     }, { linkId: 'link_join' }));
 
     expect(response.status).toBe(400);

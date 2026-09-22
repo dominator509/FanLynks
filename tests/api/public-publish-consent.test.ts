@@ -5,6 +5,7 @@ import { onRequestPost as consentPost } from '../../functions/api/privacy/consen
 import { publishedPageKey, variantManifestKey } from '../../src/server/cache/keys';
 import { createSessionCookie } from '../../src/server/auth/session';
 import { makeD1, makeKV } from '../helpers/mock-cloudflare';
+import { TEST_SESSION_SECRET } from '../helpers/test-secrets';
 
 function context(request: Request, env: Partial<Env>, params: Record<string, string> = {}): EventContext<Env, string, Record<string, string>> {
   return {
@@ -73,7 +74,7 @@ describe('public page, publish, and consent API handlers', () => {
       tenantId: 'tenant_1',
       email: 'admin@fanlynks.com',
       sessionVersion: 1
-    }, 'unit-session-secret');
+    }, TEST_SESSION_SECRET);
 
     const response = await publishPost(context(new Request('https://fanlynks.test/api/admin/page/page_demo/publish', {
       method: 'POST',
@@ -81,7 +82,7 @@ describe('public page, publish, and consent API handlers', () => {
     }), {
       DB: db,
       PAGE_CACHE: kv,
-      SESSION_SECRET: 'unit-session-secret'
+      SESSION_SECRET: TEST_SESSION_SECRET
     }, { pageId: 'page_demo' }));
 
     expect(response.status).toBe(200);
