@@ -5,6 +5,7 @@ import { onRequestGet as sessionGet } from '../../functions/api/admin/session';
 import { createSessionCookie } from '../../src/server/auth/session';
 import { verifyPassword } from '../../src/server/auth/password';
 import { makeD1, makeKV } from '../helpers/mock-cloudflare';
+import { TEST_SESSION_SECRET } from '../helpers/test-secrets';
 
 async function pbkdf2Hash(password: string, salt: string, iterations = 100000): Promise<string> {
   const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
@@ -72,7 +73,7 @@ describe('admin authentication API handlers', () => {
     }), {
       DB: db,
       PAGE_CACHE: makeKV(),
-      SESSION_SECRET: 'unit-session-secret',
+      SESSION_SECRET: TEST_SESSION_SECRET,
       TURNSTILE_SECRET_KEY: 'real-turnstile-secret'
     }));
 
@@ -128,7 +129,7 @@ describe('admin authentication API handlers', () => {
     }), {
       DB: db,
       PAGE_CACHE: makeKV(),
-      SESSION_SECRET: 'unit-session-secret',
+      SESSION_SECRET: TEST_SESSION_SECRET,
       TURNSTILE_SECRET_KEY: 'real-turnstile-secret'
     }));
 
@@ -164,7 +165,7 @@ describe('admin authentication API handlers', () => {
       }), {
         DB: db,
         PAGE_CACHE: kv,
-        SESSION_SECRET: 'unit-session-secret',
+        SESSION_SECRET: TEST_SESSION_SECRET,
         TURNSTILE_SECRET_KEY: 'real-turnstile-secret'
       }));
     }
@@ -180,7 +181,7 @@ describe('admin authentication API handlers', () => {
       tenantId: 'tenant_1',
       email: 'admin@fanlynks.com',
       sessionVersion: 2
-    }, 'unit-session-secret');
+    }, TEST_SESSION_SECRET);
 
     const validDb = makeD1([{
       match: 'FROM users u JOIN tenants',
@@ -190,7 +191,7 @@ describe('admin authentication API handlers', () => {
       headers: { cookie: validCookie }
     }), {
       DB: validDb,
-      SESSION_SECRET: 'unit-session-secret'
+      SESSION_SECRET: TEST_SESSION_SECRET
     }));
 
     expect(validResponse.status).toBe(200);
@@ -209,7 +210,7 @@ describe('admin authentication API handlers', () => {
       headers: { cookie: validCookie }
     }), {
       DB: revokedDb,
-      SESSION_SECRET: 'unit-session-secret'
+      SESSION_SECRET: TEST_SESSION_SECRET
     }));
 
     expect(revokedResponse.headers.get('set-cookie')).toBeNull();
@@ -227,7 +228,7 @@ describe('admin authentication API handlers', () => {
       tenantId: 'tenant_1',
       email: 'admin@fanlynks.com',
       sessionVersion: 4
-    }, 'unit-session-secret');
+    }, TEST_SESSION_SECRET);
     const currentHash = await pbkdf2Hash('old-password-1A', 'password-salt');
     const updates: unknown[][] = [];
     const auditRows: unknown[][] = [];
@@ -259,7 +260,7 @@ describe('admin authentication API handlers', () => {
       })
     }), {
       DB: db,
-      SESSION_SECRET: 'unit-session-secret'
+      SESSION_SECRET: TEST_SESSION_SECRET
     }));
 
     expect(response.status).toBe(200);
@@ -285,7 +286,7 @@ describe('admin authentication API handlers', () => {
       tenantId: 'tenant_1',
       email: 'admin@fanlynks.com',
       sessionVersion: 4
-    }, 'unit-session-secret');
+    }, TEST_SESSION_SECRET);
     const currentHash = await pbkdf2Hash('old-password-1A', 'password-salt');
     const updates: unknown[][] = [];
     const auditRows: unknown[][] = [];
@@ -316,7 +317,7 @@ describe('admin authentication API handlers', () => {
       })
     }), {
       DB: db,
-      SESSION_SECRET: 'unit-session-secret'
+      SESSION_SECRET: TEST_SESSION_SECRET
     }));
 
     expect(response.status).toBe(401);
