@@ -52,6 +52,8 @@ const els = {
   metaEnabled: $('metaEnabled'), metaPixelId: $('metaPixelId'), metaEventMappings: $('metaEventMappings'),
   gtmEnabled: $('gtmEnabled'), gtmContainerId: $('gtmContainerId'), gtmAdvertisingEnabled: $('gtmAdvertisingEnabled'),
   cfwaEnabled: $('cfwaEnabled'), cfwaOverlayEnabled: $('cfwaOverlayEnabled'), saveIntegrationsBtn: $('saveIntegrationsBtn'),
+  axiomTokenStatus: $('axiomTokenStatus'), issueAxiomTokenBtn: $('issueAxiomTokenBtn'), revokeAxiomTokenBtn: $('revokeAxiomTokenBtn'),
+  axiomIssuedTokenPanel: $('axiomIssuedTokenPanel'), axiomIssuedToken: $('axiomIssuedToken'), copyAxiomTokenBtn: $('copyAxiomTokenBtn'), hideAxiomTokenBtn: $('hideAxiomTokenBtn'),
   privacyBannerVersion: $('privacyBannerVersion'), privacyChoicesLabel: $('privacyChoicesLabel'), privacyBannerTitle: $('privacyBannerTitle'), privacyFooterNote: $('privacyFooterNote'), privacyBannerBody: $('privacyBannerBody'), privacyAcceptLabel: $('privacyAcceptLabel'), privacyAnalyticsOnlyLabel: $('privacyAnalyticsOnlyLabel'), privacyDeclineLabel: $('privacyDeclineLabel'), privacyGpcTitle: $('privacyGpcTitle'), privacyHonorGpc: $('privacyHonorGpc'), privacyGpcBody: $('privacyGpcBody'), savePrivacyBtn: $('savePrivacyBtn'),
   sessionState: $('sessionState'), sessionRefreshBtn: $('sessionRefreshBtn'),
   tabButtons: Array.from(document.querySelectorAll('.tab-btn')), tabPanels: Array.from(document.querySelectorAll('.tab-panel'))
@@ -705,6 +707,7 @@ async function login() {
 }
 
 async function logout() {
+  clearAxiomTokenDisclosure();
   try {
     await api('/api/admin/logout', { method: 'POST', headers: {} });
     await checkSession();
@@ -743,14 +746,105 @@ async function changePassword() {
 
 async function loadPage() {
   setStatus('Loading page...');
+  clearAxiomTokenDisclosure();
   try {
     const pageId = requirePageId();
     const data = await api(`/api/admin/page/${encodeURIComponent(pageId)}`, { method: 'GET', headers: {} });
     hydratePageForm(data.page);
-    await Promise.all([loadIntegrations(), loadExperiments(), loadAnalytics()]);
+    await Promise.all([loadIntegrations(), loadExperiments(), loadAnalytics(), loadAxiomToken()]);
     setStatus('Page loaded.');
   } catch (error) {
     setStatus(error.message, true);
+  }
+}
+
+function clearAxiomTokenDisclosure() {
+  if (els.axiomIssuedToken) {
+    els.axiomIssuedToken.value = '';
+    els.axiomIssuedToken.type = 'password';
+  }
+  if (els.axiomIssuedTokenPanel) els.axiomIssuedTokenPanel.classList.add('hidden');
+}
+
+function handlePageTargetChange() {
+  clearAxiomTokenDisclosure();
+  if (els.axiomTokenStatus) els.axiomTokenStatus.textContent = 'Load the selected page to manage its AXIOM token.';
+  if (els.issueAxiomTokenBtn) els.issueAxiomTokenBtn.disabled = true;
+  if (els.revokeAxiomTokenBtn) els.revokeAxiomTokenBtn.classList.add('hidden');
+}
+
+function renderAxiomTokenStatus(token) {
+  if (!els.axiomTokenStatus) return;
+  els.issueAxiomTokenBtn.disabled = false;
+  if (token?.configured) {
+    const used = token.lastUsedAt ? ` Last used ${new Date(token.lastUsedAt).toLocaleString()}.` : ' Not used yet.';
+    els.axiomTokenStatus.textContent = `Active token ${token.prefix}, created ${new Date(token.createdAt).toLocaleString()}.${used}`;
+    els.issueAxiomTokenBtn.textContent = 'Rotate token';
+    els.revokeAxiomTokenBtn.classList.remove('hidden');
+  } else {
+    els.axiomTokenStatus.textContent = 'No AXIOM token is active for this page.';
+    els.issueAxiomTokenBtn.textContent = 'Issue token';
+    els.revokeAxiomTokenBtn.classList.add('hidden');
+  }
+}
+
+async function loadAxiomToken() {
+  clearAxiomTokenDisclosure();
+  if (!els.axiomTokenStatus || !currentPageId()) return;
+  els.axiomTokenStatus.textContent = 'Checking AXIOM token status...';
+  try {
+    const pageId = requirePageId();
+    const data = await api(`/api/admin/page/${encodeURIComponent(pageId)}/axiom-token`, { method: 'GET', headers: {} });
+    renderAxiomTokenStatus(data.token);
+  } catch (error) {
+    els.axiomTokenStatus.textContent = `Token controls unavailable: ${error.message}`;
+    els.issueAxiomTokenBtn.disabled = false;
+    els.revokeAxiomTokenBtn.classList.add('hidden');
+  }
+}
+
+async function issueAxiomToken() {
+  clearAxiomTokenDisclosure();
+  els.axiomTokenStatus.textContent = 'Issuing page-scoped AXIOM token...';
+  els.issueAxiomTokenBtn.disabled = true;
+  try {
+    const pageId = requirePageId();
+    const data = await api(`/api/admin/page/${encodeURIComponent(pageId)}/axiom-token`, { method: 'POST', headers: {} });
+    els.axiomIssuedToken.value = data.token;
+    els.axiomIssuedToken.type = 'text';
+    els.axiomIssuedTokenPanel.classList.remove('hidden');
+    renderAxiomTokenStatus({ configured: true, prefix: data.tokenPrefix, createdAt: data.createdAt, lastUsedAt: null });
+    setStatus(data.rotated ? 'AXIOM token rotated. Copy the new token now; the previous token was revoked.' : 'AXIOM token issued. Copy it now; it will not be shown again.');
+  } catch (error) {
+    els.axiomTokenStatus.textContent = `Token issue failed: ${error.message}`;
+    setStatus(error.message, true);
+  } finally {
+    els.issueAxiomTokenBtn.disabled = false;
+  }
+}
+
+async function revokeAxiomToken() {
+  if (!window.confirm('Revoke the active AXIOM token for this page? AXIOM analytics sync will stop until a new token is issued.')) return;
+  els.revokeAxiomTokenBtn.disabled = true;
+  try {
+    const pageId = requirePageId();
+    await api(`/api/admin/page/${encodeURIComponent(pageId)}/axiom-token`, { method: 'DELETE', headers: {} });
+    clearAxiomTokenDisclosure();
+    renderAxiomTokenStatus({ configured: false });
+    setStatus('AXIOM token revoked.');
+  } catch (error) {
+    setStatus(error.message, true);
+  } finally {
+    els.revokeAxiomTokenBtn.disabled = false;
+  }
+}
+
+async function copyAxiomToken() {
+  try {
+    await navigator.clipboard.writeText(els.axiomIssuedToken.value);
+    setStatus('AXIOM token copied. Store it in AXIOM before hiding it.');
+  } catch {
+    setStatus('Copy failed. Select and copy the token field manually.', true);
   }
 }
 
@@ -1123,6 +1217,11 @@ function wire() {
   if (els.publishPageBtn) els.publishPageBtn.onclick = publishPage;
   els.saveAppearanceBtn.onclick = saveAppearance;
   els.saveIntegrationsBtn.onclick = saveIntegrations;
+  if (els.issueAxiomTokenBtn) els.issueAxiomTokenBtn.onclick = issueAxiomToken;
+  if (els.revokeAxiomTokenBtn) els.revokeAxiomTokenBtn.onclick = revokeAxiomToken;
+  if (els.copyAxiomTokenBtn) els.copyAxiomTokenBtn.onclick = copyAxiomToken;
+  if (els.hideAxiomTokenBtn) els.hideAxiomTokenBtn.onclick = clearAxiomTokenDisclosure;
+  if (els.pageId) els.pageId.addEventListener('input', handlePageTargetChange);
   els.savePrivacyBtn.onclick = savePrivacy;
   els.createLinkBtn.onclick = createLink;
   els.saveOrderBtn.onclick = saveCurrentOrder;

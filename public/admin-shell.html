@@ -478,6 +478,23 @@
             </div>
           </div>
           <div class="actions"><button id="saveIntegrationsBtn" class="primary">Save Integrations</button></div>
+          <div class="card" style="margin-top:14px">
+            <h3>AXIOM first-party analytics</h3>
+            <p class="small muted">Create a page-scoped, read-only token for AXIOM. Copy it when issued; Fan Lynks will not show it again. Imported metrics include page views and clicks only.</p>
+            <div id="axiomTokenStatus" class="small muted" role="status" aria-live="polite">Load a page to check token status.</div>
+            <div class="actions">
+              <button id="issueAxiomTokenBtn" class="alt" type="button" disabled>Issue token</button>
+              <button id="revokeAxiomTokenBtn" class="danger hidden" type="button">Revoke token</button>
+            </div>
+            <div id="axiomIssuedTokenPanel" class="hidden">
+              <label for="axiomIssuedToken">Copy this token now</label>
+              <input id="axiomIssuedToken" type="password" readonly autocomplete="off" />
+              <div class="actions">
+                <button id="copyAxiomTokenBtn" class="alt" type="button">Copy token</button>
+                <button id="hideAxiomTokenBtn" class="alt" type="button">Hide token</button>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="panel tab-panel hidden" data-panel="privacy">
