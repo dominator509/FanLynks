@@ -5,12 +5,12 @@ pages_build_output_dir = "public"
 [[d1_databases]]
 binding = "DB"
 database_name = "custom-link-hub"
-database_id = "6f99bea2-b00d-40ad-a641-8b45b18d6457"
+database_id = "2ce54591-6878-4e48-aecb-b063d722f1c1"
 
 [[kv_namespaces]]
 binding = "PAGE_CACHE"
-id = "1f99f6b0a64e470ebc6411f6e13cc64c"
-preview_id = "354e961032c64b5e881fdddf5c88eeb7"
+id = "d929ea11f8ed4822bec7be8be5ea6df4"
+preview_id = "d929ea11f8ed4822bec7be8be5ea6df4"
 
 [vars]
 APP_NAME = "Fan Lynks"
