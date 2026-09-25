@@ -17,6 +17,7 @@
     "hash:password": "node scripts/generate-password-hash.mjs",
     "smoke": "node scripts/smoke-test.mjs",
     "deploy:check": "node scripts/check-deploy-ready.mjs",
+    "test:customer-invite-d1": "node scripts/test-customer-invite-d1.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },

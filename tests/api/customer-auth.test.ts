@@ -81,6 +81,58 @@ describe('customer account API', () => {
     expect(siteverify).not.toHaveBeenCalled();
   });
 
+  it('defers invite foreign keys until the customer user is inserted in the same signup batch', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(turnstileResponse('customer_signup'));
+    const baseDb = makeD1([
+      { match: (sql, _params, kind) => kind === 'first' && sql.includes('EXISTS(SELECT 1 FROM pages'), first: { page_taken: 0, tenant_taken: 0 } },
+      { match: (sql, _params, kind) => kind === 'first' && sql.includes("account_type = 'customer'"), first: { id: 'customer_created' } },
+      { match: (_sql, _params, kind) => kind === 'run', run: { success: true } }
+    ]);
+    const batchSql: string[] = [];
+    const statementSql = new WeakMap<object, string>();
+    const wrapStatement = (statement: D1PreparedStatement, sql: string): D1PreparedStatement => {
+      const wrapped = {
+        bind(...params: unknown[]) {
+          return wrapStatement(statement.bind(...params), sql);
+        },
+        first: <T>() => statement.first<T>(),
+        all: <T>() => statement.all<T>(),
+        run: () => statement.run()
+      } as D1PreparedStatement;
+      statementSql.set(wrapped, sql);
+      return wrapped;
+    };
+    const db = {
+      prepare(sql: string) {
+        return wrapStatement(baseDb.prepare(sql), sql);
+      },
+      async batch(statements: D1PreparedStatement[]) {
+        batchSql.push(...statements.map((statement) => statementSql.get(statement as object) ?? ''));
+        return baseDb.batch(statements);
+      }
+    } as unknown as D1Database;
+
+    const response = await signupPost(context(jsonRequest('/api/customer/signup', {
+      email: 'creator@example.com',
+      fullName: 'Creator Name',
+      pageSlug: 'creator-page',
+      password: 'LongEnoughPassword2',
+      inviteToken: 'i'.repeat(43),
+      turnstileToken: 'turnstile'
+    }), {
+      DB: db,
+      PAGE_CACHE: makeKV(),
+      SESSION_SECRET: secret,
+      TURNSTILE_SECRET_KEY: 'real-turnstile-secret',
+      CUSTOMER_SIGNUP_MODE: 'invite_only'
+    }));
+
+    expect(response.status).toBe(202);
+    expect(batchSql[0]).toMatch(/^\s*PRAGMA defer_foreign_keys = ON\s*$/i);
+    expect(batchSql[1]).toContain('UPDATE customer_invites');
+    expect(batchSql[2]).toContain('INSERT INTO users');
+  });
+
   it('creates a customer workspace, verifies its email, signs in, refreshes the session and signs out', async () => {
     const siteverify = vi.spyOn(globalThis, 'fetch');
     siteverify.mockResolvedValueOnce(turnstileResponse('customer_signup'));

@@ -55,6 +55,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   const statements: D1PreparedStatement[] = [];
   if (inviteOnly) {
+    // The invite records the new user before the user row is inserted later in this atomic batch.
+    statements.push(context.env.DB.prepare('PRAGMA defer_foreign_keys = ON'));
     statements.push(context.env.DB.prepare(`
       UPDATE customer_invites
       SET redeemed_at = ?, redeemed_by = ?
