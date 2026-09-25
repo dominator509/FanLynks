@@ -121,13 +121,19 @@
 
 
   function privacyUi() {
-    return state.page?.privacyUi || {};
+    const ui = state.page?.privacyUi || {};
+    if (state.slug !== 'home') return ui;
+    return Object.fromEntries(Object.entries(ui).map(([key, value]) => [
+      key, typeof value === 'string' ? value.replace(/Fan Lynks/gi, 'Fanlynks') : value
+    ]));
   }
 
   function applyPrivacyUi() {
     const ui = privacyUi();
     dom.privacyChoices.textContent = ui.privacyChoicesLabel || 'Your Privacy Choices';
-    dom.footerNote.textContent = ui.footerNote || 'Fan Lynks keeps creator funnels clean, fast, and privacy-aware.';
+    dom.footerNote.textContent = state.slug === 'home'
+      ? 'Fanlynks gives creators a clear path from click to action.'
+      : (ui.footerNote || 'Fanlynks keeps creator funnels clean, fast, and privacy-aware.');
     updatePrivacyStatus();
   }
 
@@ -257,8 +263,8 @@
   }
 
   function renderPage() {
-    document.title = state.page.title || 'Fan Lynks';
-    dom.title.textContent = state.page.title || 'Untitled page';
+    document.title = state.slug === 'home' ? 'Fanlynks' : (state.page.title || 'Fanlynks');
+    dom.title.textContent = state.slug === 'home' ? 'Fanlynks' : (state.page.title || 'Untitled page');
     dom.subtitle.textContent = state.page.subtitle || '';
     dom.subtitle.hidden = !state.page.subtitle;
 
@@ -267,7 +273,7 @@
       dom.avatar.src = isBrandStamp ? '/assets/fanlynks/fanlynks-mark-dark.svg' : state.page.avatarUrl;
       dom.avatar.classList.toggle('brand-avatar', isBrandStamp);
       document.body.classList.toggle('brand-page', isBrandStamp);
-      dom.avatar.alt = state.page.title || 'Avatar';
+      dom.avatar.alt = state.slug === 'home' ? 'Fanlynks logo' : (state.page.title || 'Avatar');
       dom.avatar.style.display = 'block';
     } else {
       dom.avatar.classList.remove('brand-avatar');
@@ -279,7 +285,9 @@
       dom.announcement.hidden = false;
       dom.announcement.style.display = 'flex';
       dom.announcement.href = state.page.announcementUrl;
-      dom.announcementText.textContent = state.page.announcementText;
+      dom.announcementText.textContent = state.slug === 'home'
+        ? state.page.announcementText.replace(/Fan Lynks/gi, 'Fanlynks')
+        : state.page.announcementText;
       dom.announcement.onclick = (event) => interceptTrackedNavigation(event, {
         event_name: 'announcement_click',
         destination_url: state.page.announcementUrl
@@ -291,7 +299,7 @@
 
     if (state.page.heroCtaLabel && safeHttpUrl(state.page.heroCtaUrl)) {
       dom.heroCta.hidden = false;
-      dom.heroCta.textContent = state.page.heroCtaLabel;
+      dom.heroCta.textContent = state.slug === 'home' ? 'Start creating your Fanlynks page' : state.page.heroCtaLabel;
       dom.heroCta.href = state.page.heroCtaUrl;
       dom.heroCta.onclick = (event) => interceptTrackedNavigation(event, {
         event_name: 'hero_cta_click',
@@ -328,7 +336,7 @@
     if (section?.label) {
       const label = document.createElement('div');
       label.className = 'section-label';
-      label.textContent = section.label;
+      label.textContent = state.slug === 'home' ? section.label.replace(/Fan Lynks/gi, 'Fanlynks') : section.label;
       wrapper.appendChild(label);
     }
 
@@ -380,7 +388,9 @@
       titleRow.className = 'title-row';
       const title = document.createElement('div');
       title.className = 'title';
-      title.textContent = link.title;
+      title.textContent = state.slug === 'home'
+        ? link.title.replace(/Fan Lynks/gi, 'Fanlynks').replace('Contact / Partner With Fanlynks', 'Contact or partner with Fanlynks').replace('For Influencers, Fanvue & Premium Creators', 'For influencers, Fanvue creators, and premium creators')
+        : link.title;
       titleRow.appendChild(title);
       if (link.badgeText) {
         const badge = document.createElement('span');
@@ -393,7 +403,7 @@
       if (link.subtitle) {
         const subtitle = document.createElement('div');
         subtitle.className = 'subtitle-small';
-        subtitle.textContent = link.subtitle;
+        subtitle.textContent = state.slug === 'home' ? link.subtitle.replace(/Fan Lynks/gi, 'Fanlynks') : link.subtitle;
         content.appendChild(subtitle);
       }
       row.appendChild(content);
