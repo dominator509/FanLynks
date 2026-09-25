@@ -187,9 +187,10 @@
 
       .link-row {
         position: relative;
-        display: flex;
+        display: grid;
+        grid-template-columns: 46px minmax(0, 1fr) 46px;
         align-items: center;
-        gap: 12px;
+        column-gap: 12px;
         width: 100%;
         max-width: 100%;
         min-width: 0;
@@ -250,15 +251,16 @@
 
       .content {
         min-width: 0;
-        flex: 1;
+        text-align: center;
       }
       .title-row {
         display: flex;
-        align-items: flex-start;
-        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 6px;
         min-width: 0;
         max-width: 100%;
-        overflow: hidden;
       }
       .title {
         font-weight: 650;
@@ -273,6 +275,7 @@
         overflow: hidden;
       }
       .badge {
+        margin: 2px 0;
         font-size: 0.7rem;
         padding: 4px 7px;
         border-radius: 999px;
@@ -290,7 +293,7 @@
         color: var(--muted);
         line-height: 1.35;
         display: -webkit-box;
-        -webkit-line-clamp: 2;
+        -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
@@ -298,6 +301,7 @@
         color: rgba(0,0,0,0.66);
       }
       .chevron {
+        justify-self: center;
         opacity: 0.5;
         font-size: 1rem;
         flex-shrink: 0;
