@@ -260,10 +260,15 @@
     dom.subtitle.hidden = !state.page.subtitle;
 
     if (safeHttpUrl(state.page.avatarUrl)) {
-      dom.avatar.src = state.page.avatarUrl;
+      const isBrandStamp = new URL(state.page.avatarUrl).pathname === '/assets/fanlynks/fanlynks-stamp.png';
+      dom.avatar.src = isBrandStamp ? '/assets/fanlynks/fanlynks-mark-dark.svg' : state.page.avatarUrl;
+      dom.avatar.classList.toggle('brand-avatar', isBrandStamp);
+      document.body.classList.toggle('brand-page', isBrandStamp);
       dom.avatar.alt = state.page.title || 'Avatar';
       dom.avatar.style.display = 'block';
     } else {
+      dom.avatar.classList.remove('brand-avatar');
+      document.body.classList.remove('brand-page');
       dom.avatar.style.display = 'none';
     }
 
