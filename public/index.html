@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#050505" />
-  <title>Fan Lynks</title>
+  <title>Fanlynks</title>
   <link rel="icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" href="/assets/fanlynks/apple-touch-icon.png" />
   <style>
@@ -135,6 +135,8 @@
         font-weight: 500;
       }
       .brand-page h1 { font-family: var(--font-heading); }
+      .brand-page .eyebrow { display: none; }
+      .brand-page .hero-cta { display: flex; width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; }
       .subtitle {
         margin: 10px 0 0;
         color: var(--muted);
@@ -145,6 +147,8 @@
         display: inline-flex;
         margin-top: 16px;
         align-items: center;
+        justify-content: center;
+        text-align: center;
         gap: 10px;
         text-decoration: none;
         font-family: var(--font-body);
@@ -197,7 +201,7 @@
         overflow: hidden;
         text-decoration: none;
         color: inherit;
-        padding: 19px 48px;
+        padding: 19px 24px;
         border-radius: 22px;
         border: 1px solid rgba(207,160,41,.22);
         background: rgba(255,255,255,.035);
@@ -259,9 +263,9 @@
         align-items: center;
         justify-content: center;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 8px;
+        width: 100%;
         min-width: 0;
-        max-width: 100%;
       }
       .title {
         font-weight: 750;
@@ -276,7 +280,8 @@
         overflow: hidden;
       }
       .badge {
-        margin: 2px 0;
+        display: inline-block;
+        margin: 0;
         font-size: 0.7rem;
         padding: 4px 7px;
         border-radius: 999px;
@@ -302,6 +307,7 @@
         color: rgba(0,0,0,0.66);
       }
       .chevron {
+        display: none;
         position: absolute;
         right: 18px;
         top: 50%;
@@ -401,6 +407,11 @@
       }
       .status strong { color: var(--text); }
 
+      @media (max-width: 739px) {
+        .hero-cta { width: 100%; }
+        .brand-page .hero-cta { width: 100%; }
+      }
+
       @media (min-width: 740px) {
         .app { padding-top: 40px; }
         .hero { padding: 24px 24px; }
@@ -422,7 +433,7 @@
           <div class="hero-top">
             <img id="avatar" class="avatar" alt="" />
             <div>
-              <div class="eyebrow">Fan Lynks</div>
+              <div class="eyebrow">Fanlynks</div>
               <h1 id="title">Loading...</h1>
             </div>
           </div>
@@ -451,6 +462,6 @@
       </div>
     </section>
 
-    <script src="/app.js?v=20260925-brandmark1" defer></script>
+    <script src="/app.js?v=20260925-center-copy1" defer></script>
   </body>
 </html>
