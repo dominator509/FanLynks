@@ -470,7 +470,7 @@ function renderAppearancePreview() {
   shell.style.setProperty('--pv-icon', theme.iconBg);
   shell.style.fontFamily = theme.fontBody;
   shell.innerHTML = `
-    <div style="font-family:${theme.fontHeading};font-size:24px;font-weight:700;letter-spacing:0">${escapeHtml(els.pageTitle.value || 'Fan Lynks')}</div>
+    <div style="font-family:${theme.fontHeading};font-size:24px;font-weight:700;letter-spacing:0">${escapeHtml(els.pageTitle.value || 'Fanlynks')}</div>
     <div style="color:${theme.muted};margin-top:6px">${escapeHtml(els.pageSubtitle.value || 'Cleaner funnels, smarter analytics, and more control.')}</div>
     <div class="preview-row preview-btn primary"><div class="preview-icon">★</div><div><div>Primary CTA</div><div style="opacity:.72;font-size:13px">Highest value action first</div></div></div>
     <div class="preview-row preview-btn secondary"><div class="preview-icon">◎</div><div><div>Secondary CTA</div><div style="opacity:.72;font-size:13px">Supportive offer or signup</div></div></div>
