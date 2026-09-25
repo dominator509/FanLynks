@@ -217,6 +217,15 @@
           <div class="small muted">Changing your password signs out every admin session.</div>
         </section>
 
+        <section class="panel hidden" id="customerInvitesPanel">
+          <h2>Customer beta access</h2>
+          <p class="small muted">Customer accounts are invite-only. Invitations are tied to one email and expire after seven days.</p>
+          <label for="customerInviteEmail">Customer email</label>
+          <input id="customerInviteEmail" type="email" autocomplete="email" />
+          <div class="actions"><button id="createCustomerInviteBtn" class="primary">Create invitation</button></div>
+          <div id="customerInviteResult" class="small" role="status" aria-live="polite"></div>
+        </section>
+
         <section class="panel">
           <h2>Page Target</h2>
           <label>Page ID</label>

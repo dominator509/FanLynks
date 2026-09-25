@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#050505" /><title>Choose new password | Fan Lynks</title><link rel="icon" href="/favicon.ico" /><link rel="stylesheet" href="/customer.css" /></head>
+<body data-flow="reset">
+  <header class="customer-header"><a class="brand" href="/creators"><img src="/assets/fanlynks/preview-icon.png" alt="" /><span>Fan Lynks</span></a><nav class="header-actions" aria-label="Account"><a href="/login">Sign in</a></nav></header>
+  <main class="auth-shell"><section class="auth-copy"><p class="eyebrow">Secure recovery</p><h1>Choose a new password.</h1><p>After you reset your password, other signed-in sessions will be invalidated.</p></section>
+    <section class="auth-card"><h2>Set a new password</h2><p class="muted">The one-time reset link is valid for 30 minutes.</p><form id="resetForm" data-auth-form><input id="accountToken" type="hidden" /><label for="password">New password</label><input id="password" name="password" type="password" autocomplete="new-password" minlength="14" maxlength="128" required /><p class="field-hint">14–128 characters with an uppercase letter, a lowercase letter, and a number.</p><label for="confirmPassword">Confirm new password</label><input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="14" maxlength="128" required /><div class="form-actions"><button class="primary" type="submit">Update password</button></div></form><p id="formStatus" class="form-status" role="status" aria-live="polite"></p><div class="auth-links"><a href="/login">Return to sign in</a></div></section></main>
+  <script type="module" src="/customer-auth.js"></script>
+</body>
+</html>

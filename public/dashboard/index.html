@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050505" />
+  <title>Your workspace | Fan Lynks</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/customer.css" />
+</head>
+<body data-flow="dashboard">
+  <a class="skip-link" href="#dashboardMain">Skip to workspace</a>
+  <header class="customer-header">
+    <a class="brand" href="/creators"><img src="/assets/fanlynks/preview-icon.png" alt="" /><span>Fan Lynks</span></a>
+    <div class="header-actions"><span id="accountEmail" class="muted"></span><button id="logoutBtn" type="button">Sign out</button></div>
+  </header>
+  <main class="dashboard-wrap" id="dashboardMain">
+    <div class="dashboard-head"><div><p class="eyebrow">Your workspace</p><h1 id="workspaceTitle">Loading your page…</h1></div><a id="publicPageLink" class="button primary" href="#" target="_blank" rel="noopener noreferrer" hidden>View public page</a></div>
+    <p id="dashboardStatus" class="form-status" role="status" aria-live="polite"></p>
+    <div class="dashboard-layout">
+      <nav class="dashboard-nav panel" role="tablist" aria-label="Workspace sections" aria-orientation="vertical">
+        <button id="tab-overview" type="button" role="tab" aria-selected="true" aria-controls="panel-overview" data-tab="overview">Overview</button>
+        <button id="tab-page" type="button" role="tab" aria-selected="false" aria-controls="panel-page" data-tab="page">Page</button>
+        <button id="tab-links" type="button" role="tab" aria-selected="false" aria-controls="panel-links" data-tab="links">Links</button>
+        <button id="tab-analytics" type="button" role="tab" aria-selected="false" aria-controls="panel-analytics" data-tab="analytics">Analytics</button>
+        <button id="tab-settings" type="button" role="tab" aria-selected="false" aria-controls="panel-settings" data-tab="settings">Settings</button>
+      </nav>
+      <div class="dashboard-content">
+        <section class="panel tab-panel" id="panel-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+          <p class="eyebrow">At a glance</p><h2>Your page activity</h2><p class="muted">Recorded first-party activity for the last seven days.</p>
+          <div class="metric-grid"><div class="metric"><span>Page views · 7 days</span><strong id="overviewViews">—</strong><span id="overviewViewsNote"></span></div><div class="metric"><span>Link clicks · 7 days</span><strong id="overviewClicks">—</strong><span id="overviewClicksNote"></span></div></div>
+          <div class="auth-note"><strong id="overviewPageTitle">Your first page</strong><p id="overviewPageSummary" class="muted"></p><p id="overviewLinkCount" class="muted"></p></div>
+        </section>
+        <section class="panel tab-panel" id="panel-page" role="tabpanel" aria-labelledby="tab-page" tabindex="0" hidden>
+          <p class="eyebrow">Your public page</p><h2>Edit page details</h2><p class="muted">Changes appear on your public page when saved.</p>
+          <form id="pageForm" class="inline-form"><label for="pageTitle">Page title</label><input id="pageTitle" name="title" maxlength="120" required /><label for="pageSubtitle">Short introduction</label><textarea id="pageSubtitle" name="subtitle" maxlength="240"></textarea><div class="form-actions"><button class="primary" type="submit">Save page</button></div></form>
+        </section>
+        <section class="panel tab-panel" id="panel-links" role="tabpanel" aria-labelledby="tab-links" tabindex="0" hidden>
+          <p class="eyebrow">Your destinations</p><h2>Manage links</h2><p class="muted">Add, update, or remove links on your page.</p><div id="linkList" class="link-list"></div>
+          <hr class="rule" /><h3>Add a link</h3><form id="newLinkForm" class="inline-form"><label for="newLinkTitle">Link title</label><input id="newLinkTitle" name="title" maxlength="120" required /><label for="newLinkUrl">Destination URL</label><input id="newLinkUrl" name="url" type="url" inputmode="url" placeholder="https://" maxlength="2048" required /><label for="newLinkSubtitle">Description (optional)</label><input id="newLinkSubtitle" name="subtitle" maxlength="180" /><div class="form-actions"><button class="primary" type="submit">Add link</button></div></form>
+        </section>
+        <section class="panel tab-panel" id="panel-analytics" role="tabpanel" aria-labelledby="tab-analytics" tabindex="0" hidden>
+          <p class="eyebrow">First-party reporting</p><h2>Last seven days</h2><p class="muted">Only recorded events are shown. New pages have no activity until visitors arrive.</p>
+          <div class="metric-grid"><div class="metric"><span>Page views</span><strong id="analyticsViews">—</strong><span id="analyticsViewsNote"></span></div><div class="metric"><span>Link clicks</span><strong id="analyticsClicks">—</strong><span id="analyticsClicksNote"></span></div></div>
+          <p id="analyticsEmpty" class="auth-note" hidden>No page views or link clicks have been recorded in this period.</p>
+        </section>
+        <section class="panel tab-panel" id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" tabindex="0" hidden>
+          <p class="eyebrow">Account settings</p><h2>Workspace settings</h2><p id="settingsEmail" class="muted"></p>
+          <form id="settingsForm" class="inline-form"><label for="profileName">Profile name</label><input id="profileName" name="profileName" maxlength="80" minlength="2" required /><div class="form-actions"><button class="primary" type="submit">Save settings</button></div></form>
+          <hr class="rule" /><h3>Change password</h3><form id="passwordForm" class="inline-form"><label for="currentPassword">Current password</label><input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required /><label for="newPassword">New password</label><input id="newPassword" name="newPassword" type="password" autocomplete="new-password" minlength="14" maxlength="128" required /><p class="field-hint">14–128 characters with an uppercase letter, a lowercase letter, and a number.</p><label for="confirmPassword">Confirm new password</label><input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="14" maxlength="128" required /><div class="form-actions"><button type="submit">Change password</button></div></form>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="/customer-dashboard.js"></script>
+</body>
+</html>

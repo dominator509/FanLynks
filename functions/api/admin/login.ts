@@ -182,7 +182,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       t.id AS tenant_id
     FROM users u
     JOIN tenants t ON t.owner_user_id = u.id
-    WHERE lower(u.email) = ? AND u.is_active = 1
+    WHERE lower(u.email) = ? AND u.is_active = 1 AND u.account_type = 'owner'
     LIMIT 1
   `)
     .bind(email)
