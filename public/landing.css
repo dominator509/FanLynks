@@ -113,14 +113,14 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
-  border-radius: 12px;
-  padding: 9px 12px;
+  min-height: 44px;
+  border-radius: 14px;
+  padding: 11px 19px;
   text-decoration: none;
   font-size: 13px;
   font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
@@ -133,22 +133,52 @@ a {
   color: var(--text);
 }
 
-.button {
-  border: 1px solid var(--line);
-  background: var(--surface-2);
+.button,
+.nav-links a.button {
+  border: 1px solid rgba(240,210,122,.28);
+  background: rgba(255,255,255,.035);
   color: var(--text);
+  box-shadow: none;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
 }
 
-.button.primary {
-  border-color: var(--gold);
-  background: var(--gold);
-  color: #050505;
+.button.primary,
+.nav-links a.button.primary {
+  border-color: rgba(255,255,255,.12);
+  background: linear-gradient(135deg, #f0d27a, #cfa029);
+  color: #211704;
+  box-shadow: 0 10px 25px rgba(207,160,41,.18), inset 0 1px rgba(255,255,255,.45);
 }
 
-.button.light {
-  border-color: #ffffff;
-  background: #ffffff;
-  color: #050505;
+.button.light,
+.nav-links a.button.light {
+  border-color: rgba(255,255,255,.66);
+  background: linear-gradient(180deg, #fff, #e8e3da);
+  color: #211704;
+}
+
+.button:hover,
+.nav-links a.button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(240,210,122,.45);
+  box-shadow: 0 10px 24px rgba(0,0,0,.16);
+}
+
+.button.primary:hover,
+.nav-links a.button.primary:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 14px 30px rgba(207,160,41,.26);
+}
+
+.button:focus-visible,
+.nav-links a.button:focus-visible {
+  outline: 2px solid #f0d27a;
+  outline-offset: 3px;
+}
+
+.button:active,
+.nav-links a.button:active {
+  transform: translateY(0);
 }
 
 .hero {
@@ -338,15 +368,15 @@ h3 {
   min-height: 58px;
   margin-top: 10px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 12px 13px;
-  background: #141414;
+  border-radius: 16px;
+  padding: 13px 16px;
+  background: rgba(255,255,255,.035);
   color: var(--text);
 }
 
 .preview-row.primary {
-  background: var(--gold);
-  color: #050505;
+  background: linear-gradient(135deg, #f0d27a, #cfa029);
+  color: #211704;
 }
 
 .form-links {
