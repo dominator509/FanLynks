@@ -241,8 +241,11 @@
     root.style.setProperty('--shadow', tokens.shadow);
     root.style.setProperty('--radius', normalizeCssUnit(tokens.radius));
     root.style.setProperty('--button-radius', normalizeCssUnit(tokens.buttonRadius));
-    root.style.setProperty('--font-body', tokens.fontBody);
-    root.style.setProperty('--font-heading', tokens.fontHeading);
+    // The brand page shares its type system with FanThynks. Other creators retain their chosen page fonts.
+    if (state.slug !== 'home') {
+      root.style.setProperty('--font-body', tokens.fontBody);
+      root.style.setProperty('--font-heading', tokens.fontHeading);
+    }
     root.style.setProperty('--max-width', normalizeCssUnit(tokens.maxWidth));
     root.style.setProperty('--gap', normalizeCssUnit(tokens.gap));
   }
