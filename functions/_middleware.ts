@@ -1,7 +1,10 @@
 function applySecurityHeaders(request: Request, response: Response): Response {
   const url = new URL(request.url);
   const headers = new Headers(response.headers);
-  const isAdmin = url.pathname === '/admin.html' || url.pathname.startsWith('/api/admin/');
+  const isPrivate = url.pathname === '/admin.html'
+    || url.pathname.startsWith('/api/admin/')
+    || url.pathname.startsWith('/api/customer/')
+    || ['/login', '/signup', '/dashboard', '/verify-email', '/forgot-password', '/reset-password', '/resend-verification'].includes(url.pathname);
 
   headers.set('X-Content-Type-Options', 'nosniff');
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -23,7 +26,7 @@ function applySecurityHeaders(request: Request, response: Response): Response {
     "upgrade-insecure-requests"
   ].join('; '));
 
-  if (isAdmin) {
+  if (isPrivate) {
     headers.set('Cache-Control', 'no-store');
     headers.set('Pragma', 'no-cache');
   }

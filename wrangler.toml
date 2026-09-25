@@ -12,5 +12,11 @@ binding = "PAGE_CACHE"
 id = "1f99f6b0a64e470ebc6411f6e13cc64c"
 preview_id = "354e961032c64b5e881fdddf5c88eeb7"
 
+[[services]]
+binding = "MAILER"
+service = "fanlynks-mailer"
+
 [vars]
 APP_NAME = "Fan Lynks"
+APP_ORIGIN = "https://fanlynks.com"
+CUSTOMER_SIGNUP_MODE = "invite_only"

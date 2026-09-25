@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050505" />
+  <title>Sign in | Fan Lynks</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="/customer.css" />
+</head>
+<body data-flow="login">
+  <a class="skip-link" href="#main">Skip to sign in</a>
+  <header class="customer-header">
+    <a class="brand" href="/creators"><img src="/assets/fanlynks/preview-icon.png" alt="" /><span>Fan Lynks</span></a>
+    <nav class="header-actions" aria-label="Account"><a href="/signup">Create account</a></nav>
+  </header>
+  <main class="auth-shell" id="main">
+    <section class="auth-copy">
+      <p class="eyebrow">Creator workspace</p>
+      <h1>Your links, your audience, your view.</h1>
+      <p>Sign in to update your page and review the first-party activity it records. Your workspace is private to your account.</p>
+    </section>
+    <section class="auth-card" aria-labelledby="formTitle">
+      <h2 id="formTitle">Welcome back</h2>
+      <p class="muted">Use the email address you confirmed when creating your account.</p>
+      <form id="loginForm" data-auth-form>
+        <label for="email">Email address</label>
+        <input id="email" name="email" type="email" autocomplete="username" maxlength="254" required />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+        <div id="turnstileWidget" class="security-check" aria-label="Security check"></div>
+        <input id="turnstileToken" name="turnstileToken" type="hidden" />
+        <div class="form-actions"><button class="primary" type="submit">Sign in</button></div>
+      </form>
+      <p id="formStatus" class="form-status" role="status" aria-live="polite"></p>
+      <div class="auth-links"><a href="/forgot-password">Forgot password?</a><a href="/resend-verification">Resend email confirmation</a></div>
+    </section>
+  </main>
+  <script type="module" src="/customer-auth.js"></script>
+</body>
+</html>

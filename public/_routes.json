@@ -2,7 +2,14 @@
   "version": 1,
   "include": [
     "/api/*",
-    "/admin.html"
+    "/admin.html",
+    "/login",
+    "/signup",
+    "/dashboard",
+    "/verify-email",
+    "/forgot-password",
+    "/reset-password",
+    "/resend-verification"
   ],
   "exclude": [
     "/assets/*",

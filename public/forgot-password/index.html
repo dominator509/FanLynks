@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="theme-color" content="#050505" /><title>Recover account | Fan Lynks</title><link rel="icon" href="/favicon.ico" /><link rel="stylesheet" href="/customer.css" /></head>
+<body data-flow="forgot">
+  <header class="customer-header"><a class="brand" href="/creators"><img src="/assets/fanlynks/preview-icon.png" alt="" /><span>Fan Lynks</span></a><nav class="header-actions" aria-label="Account"><a href="/login">Sign in</a></nav></header>
+  <main class="auth-shell"><section class="auth-copy"><p class="eyebrow">Account recovery</p><h1>Get back to your page.</h1><p>We’ll send a short-lived reset link to a verified account email when one matches.</p></section>
+    <section class="auth-card"><h2>Reset password</h2><p class="muted">For privacy, the confirmation message is the same whether or not an account matches.</p><form id="forgotForm" data-auth-form><label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" maxlength="254" required /><div id="turnstileWidget" class="security-check" aria-label="Security check"></div><input id="turnstileToken" name="turnstileToken" type="hidden" /><div class="form-actions"><button class="primary" type="submit">Send reset link</button></div></form><p id="formStatus" class="form-status" role="status" aria-live="polite"></p><div class="auth-links"><a href="/login">Return to sign in</a></div></section></main>
+  <script type="module" src="/customer-auth.js"></script>
+</body>
+</html>

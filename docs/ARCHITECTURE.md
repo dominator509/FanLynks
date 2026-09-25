@@ -99,6 +99,8 @@ System of record for:
 - integrations
 - audit log
 - first-party events
+- customer account type and email verification state
+- hashed invitation and one-time verification/reset tokens
 
 ### KV
 Fast read/cache adjunct for:
@@ -130,3 +132,12 @@ Fast read/cache adjunct for:
 - One event model
 - No arbitrary custom script injection in MVP
 - Third-party tags never bypass first-party instrumentation
+
+## Customer accounts
+
+- Seeded account rows remain `owner` by default. Customer sign-in uses a distinct cookie and accepts only verified `customer` accounts.
+- Signup is invite-only unless the operator deliberately sets `CUSTOMER_SIGNUP_MODE=open`.
+- A customer receives one tenant, a page, and its initial Links section in a single D1 batch. Page and link reads/writes are scoped to that tenant.
+- Confirmation and reset tokens are random, single-use values; only SHA-256 token hashes are stored in D1.
+- Pages Functions call a private Email Worker through a service binding. The Worker uses the Cloudflare Email Service binding and sends only invitation, confirmation, and password-reset templates.
+- Customer edits refresh the public page snapshot and write tenant-scoped audit rows. Dashboard analytics come only from recorded first-party `page_view` and `link_click` events.

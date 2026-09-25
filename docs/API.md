@@ -10,6 +10,24 @@
 - `POST /api/admin/login`
 - `POST /api/admin/logout`
 - `GET /api/admin/session`
+- `POST /api/admin/customer-invites` (owner/admin only; creates a seven-day, email-bound beta invitation)
+
+## Customer account routes
+- `GET /api/customer/config`
+- `POST /api/customer/signup` (invite-only by default; open registration requires an explicit `CUSTOMER_SIGNUP_MODE=open` deployment setting)
+- `POST /api/customer/login`
+- `GET /api/customer/session`
+- `POST /api/customer/logout`
+- `POST /api/customer/verify-email`
+- `POST /api/customer/resend-verification`
+- `POST /api/customer/forgot-password`
+- `POST /api/customer/reset-password`
+- `GET /api/customer/dashboard` (tenant-scoped page, link, and seven-day first-party analytics data)
+- `PUT /api/customer/page`
+- `GET` / `POST /api/customer/links`
+- `PUT` / `DELETE /api/customer/links/:linkId`
+- `GET` / `PUT /api/customer/settings`
+- `PUT /api/customer/password`
 
 ## Admin page routes
 - `GET /api/admin/page/:pageId`
@@ -43,6 +61,9 @@
 - JSON in, JSON out
 - explicit error codes/messages
 - admin mutating routes require valid session
+- customer routes use a separate signed cookie and require a verified `customer` account; admin routes accept only `owner` accounts
+- customer queries scope page, link, analytics, and settings access by the session tenant
+- customer mutations require a same-origin request and write audit events
 - privacy-sensitive routes must resolve effective region policy server-side
 
 

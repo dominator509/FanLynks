@@ -121,7 +121,7 @@ export async function validateAdminSession(args: {
     SELECT u.id, u.email, u.session_version, u.is_active, t.id AS tenant_id
     FROM users u
     JOIN tenants t ON t.owner_user_id = u.id
-    WHERE u.id = ?
+    WHERE u.id = ? AND u.account_type = 'owner'
     LIMIT 1
   `)
     .bind(session.userId)

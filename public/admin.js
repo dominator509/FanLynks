@@ -40,6 +40,7 @@ const EXP_PRESETS = [
 const els = {
   email: $('email'), password: $('password'), turnstileToken: $('turnstileToken'), turnstileWidget: $('turnstileWidget'), loginBtn: $('loginBtn'), logoutBtn: $('logoutBtn'), loginPanel: $('loginPanel'),
   passwordPanel: $('passwordPanel'), currentPassword: $('currentPassword'), newPassword: $('newPassword'), confirmPassword: $('confirmPassword'), changePasswordBtn: $('changePasswordBtn'),
+  customerInvitesPanel: $('customerInvitesPanel'), customerInviteEmail: $('customerInviteEmail'), createCustomerInviteBtn: $('createCustomerInviteBtn'), customerInviteResult: $('customerInviteResult'),
   pageId: $('pageId'), loadBtn: $('loadBtn'), previewBtn: $('previewBtn'), status: $('status'),
   pageTitle: $('pageTitle'), pageSubtitle: $('pageSubtitle'), pageAvatar: $('pageAvatar'), heroLabel: $('heroLabel'), heroUrl: $('heroUrl'),
   announcementEnabled: $('announcementEnabled'), announcementText: $('announcementText'), announcementUrl: $('announcementUrl'), trackingMode: $('trackingMode'), privacyMode: $('privacyMode'), savePageBtn: $('savePageBtn'), publishPageBtn: $('publishPageBtn'), pageSlugChip: $('pageSlugChip'), pageVersionChip: $('pageVersionChip'),
@@ -138,6 +139,7 @@ function updateSessionUi() {
   els.sessionState.classList.toggle('hidden', !active);
   els.sessionRefreshBtn.classList.toggle('hidden', !active);
   if (els.passwordPanel) els.passwordPanel.classList.toggle('hidden', !active);
+  if (els.customerInvitesPanel) els.customerInvitesPanel.classList.toggle('hidden', !active);
   if (!active) return;
   els.sessionState.textContent = relativeSessionLabel(info.user?.expiresAt);
   const ms = expiresInMs(info.user?.expiresAt);
@@ -1191,6 +1193,35 @@ async function chooseWinner(experimentId, winnerVariantId) {
   }
 }
 
+async function createCustomerInvite() {
+  const email = els.customerInviteEmail?.value?.trim();
+  if (!email) return setStatus('Enter a customer email to create an invitation.', true);
+  els.customerInviteResult.textContent = 'Creating invitation…';
+  try {
+    const result = await api('/api/admin/customer-invites', { method: 'POST', body: JSON.stringify({ email }) });
+    els.customerInviteResult.replaceChildren();
+    const note = document.createElement('p');
+    note.textContent = result.emailSent ? `Invitation email sent. Expires ${new Date(result.expiresAt).toLocaleString()}.` : `Invitation created. Email delivery is not configured; copy the link and send it securely. Expires ${new Date(result.expiresAt).toLocaleString()}.`;
+    const link = document.createElement('a');
+    link.href = result.inviteUrl;
+    link.textContent = 'Copy invitation link';
+    link.addEventListener('click', async (event) => {
+      event.preventDefault();
+      try {
+        await navigator.clipboard.writeText(result.inviteUrl);
+        setStatus('Invitation link copied.');
+      } catch {
+        window.prompt('Copy this invitation link and send it securely:', result.inviteUrl);
+      }
+    });
+    els.customerInviteResult.append(note, link);
+    setStatus('Customer invitation created.');
+  } catch (error) {
+    els.customerInviteResult.textContent = error.message || 'Could not create the invitation.';
+    setStatus(error.message, true);
+  }
+}
+
 function fillPresetOptions() {
   els.appearancePreset.innerHTML = Object.keys(PRESETS).map((key) => `<option value="${key}">${key.replace(/_/g, ' ')}</option>`).join('');
 }
@@ -1208,6 +1239,7 @@ function wire() {
   els.loginBtn.onclick = login;
   els.logoutBtn.onclick = logout;
   if (els.changePasswordBtn) els.changePasswordBtn.onclick = changePassword;
+  if (els.createCustomerInviteBtn) els.createCustomerInviteBtn.onclick = createCustomerInvite;
   els.loadBtn.onclick = loadPage;
   els.previewBtn.onclick = () => {
     if (!state.payload?.page?.slug) return setStatus('Load a page first.', true);

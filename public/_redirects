@@ -1,5 +1,12 @@
 /api/* /api/:splat 200
 /assets/* /assets/:splat 200
+/login /login/index.html 200
+/signup /signup/index.html 200
+/dashboard /dashboard/index.html 200
+/verify-email /verify-email/index.html 200
+/forgot-password /forgot-password/index.html 200
+/reset-password /reset-password/index.html 200
+/resend-verification /resend-verification/index.html 200
 /join /join/index.html 200
 /demo /demo/index.html 200
 /analytics /analytics/index.html 200
